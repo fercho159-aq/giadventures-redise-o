@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { SITE_URL } from "@/lib/constants";
 
 interface BookingPayload {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     const unitAmount = Math.round(pricePerPerson * 100);
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ["card"],
       customer_email: contactEmail,
       line_items: [

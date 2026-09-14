@@ -227,7 +227,7 @@ export default function GaleriaContent() {
 
   const lightboxSlides = filteredItems.map((item) => ({
     src: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"/>`,
-    alt: item.caption,
+    alt: item.caption ?? "",
     width: 1200,
     height: 800,
   }));
@@ -390,7 +390,8 @@ export default function GaleriaContent() {
         slides={lightboxSlides}
         render={{
           slide: ({ slide, rect }) => {
-            const item = filteredItems[lightboxSlides.indexOf(slide)];
+            const idx = lightboxSlides.findIndex((s) => s.src === slide.src);
+            const item = filteredItems[idx];
             if (!item) return null;
             return (
               <div

@@ -6,7 +6,7 @@ import {
   Mail,
   Phone,
   MessageCircle,
-  Instagram,
+  Camera,
   Clock,
   MapPin,
 } from "lucide-react";
@@ -139,7 +139,7 @@ export default function ContactInfo() {
             className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 text-white transition-transform hover:scale-105"
             aria-label={`${t("instagram")} - @adventures_gi`}
           >
-            <Instagram className="h-5 w-5" aria-hidden="true" />
+            <Camera className="h-5 w-5" aria-hidden="true" />
           </a>
           <a
             href={TIKTOK_URL}
