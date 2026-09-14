@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   Clock,
   Mountain,
@@ -13,6 +14,7 @@ interface PackageHeroProps {
   title: string;
   subtitle?: string;
   mainImageAlt: string;
+  image?: string;
   duration: { days: number; nights: number };
   altitude: number;
   difficulty: keyof typeof DIFFICULTY_COLORS;
@@ -23,6 +25,7 @@ export default function PackageHero({
   title,
   subtitle,
   mainImageAlt,
+  image,
   duration,
   altitude,
   difficulty,
@@ -30,30 +33,23 @@ export default function PackageHero({
 }: PackageHeroProps) {
   return (
     <section className="relative h-[50vh] min-h-[400px] md:h-[60vh] md:min-h-[500px] w-full overflow-hidden">
-      {/* Placeholder background for hero image */}
-      <div
-        className="absolute inset-0 bg-gradient-to-br from-slate-700 via-forest-800 to-slate-900"
-        role="img"
-        aria-label={mainImageAlt}
-      >
-        {/* Decorative mountain silhouette */}
-        <svg
-          className="absolute bottom-0 left-0 right-0 h-1/2 text-slate-900/20"
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            fill="currentColor"
-            d="M0,224L48,213.3C96,203,192,181,288,186.7C384,192,480,224,576,229.3C672,235,768,213,864,186.7C960,160,1056,128,1152,128C1248,128,1344,160,1392,176L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-          />
-        </svg>
-        <Mountain
-          className="absolute top-1/2 left-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 text-white/10 md:h-48 md:w-48"
-          strokeWidth={1}
-          aria-hidden="true"
+      {/* Background image */}
+      {image ? (
+        <Image
+          src={image}
+          alt={mainImageAlt}
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
         />
-      </div>
+      ) : (
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-slate-700 via-forest-800 to-slate-900"
+          role="img"
+          aria-label={mainImageAlt}
+        />
+      )}
 
       {/* Gradient overlay from bottom */}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />

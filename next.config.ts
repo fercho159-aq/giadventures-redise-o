@@ -6,6 +6,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https' as const, hostname: 'cdn.sanity.io' },
+      { protocol: 'https' as const, hostname: 'images.unsplash.com' },
     ],
   },
   async redirects() {
@@ -31,9 +32,7 @@ const nextConfig = {
       { source: '/alto-rendimiento/', destination: '/categorias/alto-rendimiento', permanent: true },
       { source: '/expediciones-internacionales', destination: '/categorias/internacionales', permanent: true },
       { source: '/expediciones-internacionales/', destination: '/categorias/internacionales', permanent: true },
-      { source: '/nosotros', destination: '/nosotros', permanent: true },
-      { source: '/nuestra-ceo', destination: '/nuestra-ceo', permanent: true },
-      { source: '/contacto', destination: '/contacto', permanent: true },
+      // /nosotros, /nuestra-ceo, /contacto keep same paths — no redirect needed
       { source: '/galeria-profesional', destination: '/galeria', permanent: true },
       { source: '/nuestros-clientes', destination: '/clientes', permanent: true },
       { source: '/personaliza-tu-aventura', destination: '/personaliza', permanent: true },

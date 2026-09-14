@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
+import Image from "next/image";
 import { Clock, Mountain, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -24,6 +25,7 @@ interface MockPackage {
   price: number;
   currency: string;
   country: string;
+  image: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -41,6 +43,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     price: 1800,
     currency: "MXN",
     country: "México",
+    image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=75",
   },
   {
     id: "2",
@@ -52,6 +55,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     price: 2200,
     currency: "MXN",
     country: "México",
+    image: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=600&q=75",
   },
   {
     id: "3",
@@ -63,6 +67,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     price: 4500,
     currency: "MXN",
     country: "México",
+    image: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&q=75",
   },
   {
     id: "4",
@@ -74,6 +79,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     price: 7500,
     currency: "MXN",
     country: "México",
+    image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600&q=75",
   },
   {
     id: "5",
@@ -85,6 +91,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     price: 25000,
     currency: "MXN",
     country: "Ecuador",
+    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=75",
   },
   {
     id: "6",
@@ -96,6 +103,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     price: 45000,
     currency: "MXN",
     country: "Perú",
+    image: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=600&q=75",
   },
 ];
 
@@ -103,14 +111,7 @@ const MOCK_PACKAGES: MockPackage[] = [
 // Gradient backgrounds to simulate unique card images per mountain
 // ---------------------------------------------------------------------------
 
-const CARD_GRADIENTS: string[] = [
-  "linear-gradient(135deg, #166534 0%, #15803d 40%, #4ade80 100%)",
-  "linear-gradient(135deg, #1e3a5f 0%, #334155 40%, #94a3b8 100%)",
-  "linear-gradient(135deg, #1e293b 0%, #475569 50%, #cbd5e1 100%)",
-  "linear-gradient(135deg, #431407 0%, #9a3412 40%, #fb923c 100%)",
-  "linear-gradient(135deg, #0c4a6e 0%, #0369a1 40%, #38bdf8 100%)",
-  "linear-gradient(135deg, #3b0764 0%, #7e22ce 40%, #d8b4fe 100%)",
-];
+// Images loaded from Unsplash via next/image
 
 // ---------------------------------------------------------------------------
 // Package card component
@@ -118,12 +119,8 @@ const CARD_GRADIENTS: string[] = [
 
 function PackageCardHome({
   pkg,
-  gradient,
-  index,
 }: {
   pkg: MockPackage;
-  gradient: string;
-  index: number;
 }) {
   const tPkg = useTranslations("package");
   const tDiff = useTranslations("difficulty");
@@ -135,23 +132,16 @@ function PackageCardHome({
       href={`/expediciones/${pkg.slug}`}
       className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-summit-500 focus:ring-offset-2"
     >
-      {/* Image placeholder with gradient + mountain silhouette */}
-      <div
-        className="relative h-48 w-full overflow-hidden sm:h-52"
-        style={{ background: gradient }}
-      >
-        {/* Mountain silhouette SVG */}
-        <svg
-          className="absolute bottom-0 left-0 w-full text-white/10"
-          viewBox="0 0 400 120"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M0,120 L0,80 L60,40 L100,70 L150,20 L200,60 L250,30 L300,55 L350,15 L400,50 L400,120 Z"
-            fill="currentColor"
-          />
-        </svg>
+      {/* Card image */}
+      <div className="relative h-48 w-full overflow-hidden sm:h-52">
+        <Image
+          src={pkg.image}
+          alt={pkg.title}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 768px) 82vw, (max-width: 1024px) 50vw, 33vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
         {/* Country badge (for international) */}
         {pkg.country !== "México" && (
@@ -284,11 +274,7 @@ export default function FeaturedExpeditions() {
               className="w-[82vw] flex-shrink-0 snap-center sm:w-[65vw] md:w-auto"
               variants={cardVariants}
             >
-              <PackageCardHome
-                pkg={pkg}
-                gradient={CARD_GRADIENTS[i % CARD_GRADIENTS.length]}
-                index={i}
-              />
+              <PackageCardHome pkg={pkg} />
             </motion.div>
           ))}
         </motion.div>

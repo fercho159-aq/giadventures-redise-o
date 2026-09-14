@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
+import Image from "next/image";
 import type { Metadata } from "next";
 import ContactForm from "@/components/contact/ContactForm";
 import ContactInfo from "@/components/contact/ContactInfo";
@@ -30,8 +31,17 @@ export default async function ContactoPage({
   return (
     <main className="pt-20 lg:pt-24">
       {/* Hero section */}
-      <section className="bg-gradient-to-b from-slate-900 to-slate-800 py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+      <section className="relative overflow-hidden py-16 md:py-24">
+        <Image
+          src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1920&q=80"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-slate-900/75" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl font-heading font-bold text-white sm:text-4xl md:text-5xl">
             {t("heroTitle")}
           </h1>

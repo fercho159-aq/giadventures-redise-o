@@ -8,7 +8,8 @@ import {
   AnimatePresence,
   type Variants,
 } from "framer-motion";
-import { Mountain, Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import { Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
@@ -27,7 +28,7 @@ interface GalleryItem {
   id: string;
   caption: string;
   category: GalleryCategory;
-  gradient: string;
+  image: string;
   aspect: "square" | "tall" | "wide";
 }
 
@@ -36,105 +37,105 @@ const GALLERY_ITEMS: GalleryItem[] = [
     id: "1",
     caption: "Pico de Orizaba al amanecer",
     category: "montanas",
-    gradient: "linear-gradient(135deg, #14532d 0%, #15803d 40%, #4ade80 100%)",
+    image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80",
     aspect: "tall",
   },
   {
     id: "2",
     caption: "Equipo rumbo a la cumbre del Izta",
     category: "expediciones",
-    gradient: "linear-gradient(135deg, #1e293b 0%, #475569 50%, #94a3b8 100%)",
+    image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80",
     aspect: "wide",
   },
   {
     id: "3",
     caption: "Nevado de Toluca y sus lagunas",
     category: "montanas",
-    gradient: "linear-gradient(135deg, #0c4a6e 0%, #0369a1 40%, #38bdf8 100%)",
+    image: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=800&q=80",
     aspect: "square",
   },
   {
     id: "4",
     caption: "Nuestro equipo de guias certificados",
     category: "equipo",
-    gradient: "linear-gradient(135deg, #431407 0%, #9a3412 40%, #fb923c 100%)",
+    image: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800&q=80",
     aspect: "square",
   },
   {
     id: "5",
     caption: "Vista panoramica desde La Malinche",
     category: "paisajes",
-    gradient: "linear-gradient(135deg, #3b0764 0%, #7e22ce 40%, #d8b4fe 100%)",
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
     aspect: "wide",
   },
   {
     id: "6",
     caption: "Glaciar de Jamapa, Pico de Orizaba",
     category: "montanas",
-    gradient: "linear-gradient(135deg, #164e63 0%, #0e7490 40%, #67e8f9 100%)",
+    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
     aspect: "tall",
   },
   {
     id: "7",
     caption: "Campamento base en Iztaccihuatl",
     category: "expediciones",
-    gradient: "linear-gradient(135deg, #1e3a5f 0%, #334155 40%, #cbd5e1 100%)",
+    image: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=800&q=80",
     aspect: "square",
   },
   {
     id: "8",
     caption: "Atardecer en el volcan de Fuego",
     category: "paisajes",
-    gradient: "linear-gradient(135deg, #7c2d12 0%, #ea580c 40%, #fdba74 100%)",
+    image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80",
     aspect: "wide",
   },
   {
     id: "9",
     caption: "Giovanna en la cumbre del Cotopaxi",
     category: "equipo",
-    gradient: "linear-gradient(135deg, #052e16 0%, #166534 40%, #86efac 100%)",
+    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80",
     aspect: "tall",
   },
   {
     id: "10",
     caption: "Sierra Negra bajo la niebla",
     category: "montanas",
-    gradient: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #475569 100%)",
+    image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600&q=80",
     aspect: "square",
   },
   {
     id: "11",
     caption: "Preparacion del equipo tecnico",
     category: "expediciones",
-    gradient: "linear-gradient(135deg, #312e81 0%, #4338ca 40%, #a5b4fc 100%)",
+    image: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=600&q=80",
     aspect: "square",
   },
   {
     id: "12",
     caption: "Amanecer sobre el Valle de Puebla",
     category: "paisajes",
-    gradient: "linear-gradient(135deg, #78350f 0%, #d97706 40%, #fde68a 100%)",
+    image: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800&q=80",
     aspect: "wide",
   },
   {
     id: "13",
     caption: "Ruta de ascenso al Nevado de Toluca",
     category: "expediciones",
-    gradient: "linear-gradient(135deg, #1a2e05 0%, #3f6212 40%, #a3e635 100%)",
+    image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80",
     aspect: "tall",
   },
   {
     id: "14",
     caption: "Crater del Nevado de Toluca",
     category: "paisajes",
-    gradient: "linear-gradient(135deg, #083344 0%, #155e75 40%, #22d3ee 100%)",
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
     aspect: "square",
   },
   {
     id: "15",
     caption: "Equipo en cumbre del Pico de Orizaba",
     category: "equipo",
-    gradient: "linear-gradient(135deg, #14532d 0%, #ea580c 40%, #fbbf24 100%)",
+    image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80",
     aspect: "wide",
   },
 ];
@@ -226,10 +227,10 @@ export default function GaleriaContent() {
   /* ---------------------------------------------------------------- */
 
   const lightboxSlides = filteredItems.map((item) => ({
-    src: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"/>`,
+    src: item.image.replace(/w=\d+/, "w=1600").replace(/q=\d+/, "q=90"),
     alt: item.caption ?? "",
-    width: 1200,
-    height: 800,
+    width: 1600,
+    height: 1067,
   }));
 
   return (
@@ -239,21 +240,18 @@ export default function GaleriaContent() {
       {/* ============================================================ */}
       <section
         ref={heroRef}
-        className="relative overflow-hidden bg-gradient-to-b from-slate-900 to-slate-800 py-20 md:py-28"
+        className="relative overflow-hidden py-20 md:py-28"
         aria-labelledby="gallery-hero-title"
       >
-        <div className="absolute inset-0" aria-hidden="true">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: [
-                "radial-gradient(ellipse 150% 60% at 20% 90%, #14532d 0%, transparent 50%)",
-                "radial-gradient(ellipse 120% 50% at 80% 80%, #431407 0%, transparent 50%)",
-                "linear-gradient(to bottom, #0f172a 0%, #1e293b 60%, #0f172a 100%)",
-              ].join(", "),
-            }}
-          />
-        </div>
+        <Image
+          src="https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=1920&q=80"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-slate-900/70" />
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <motion.h1
@@ -337,29 +335,16 @@ export default function GaleriaContent() {
                   className={`group relative cursor-pointer overflow-hidden rounded-xl shadow-sm transition-shadow hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-forest-500 focus:ring-offset-2 ${aspectToClass(
                     item.aspect
                   )}`}
-                  style={{ background: item.gradient }}
                   onClick={() => openLightbox(index)}
                   aria-label={`${t("viewFullscreen")}: ${item.caption}`}
                 >
-                  {/* Mountain icon placeholder */}
-                  <Mountain
-                    className="absolute top-1/2 left-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 text-white/15"
-                    strokeWidth={1}
-                    aria-hidden="true"
+                  <Image
+                    src={item.image}
+                    alt={item.caption}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   />
-
-                  {/* Mountain silhouette */}
-                  <svg
-                    className="absolute bottom-0 left-0 w-full text-black/10"
-                    viewBox="0 0 400 80"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M0,80 L0,50 L60,25 L100,40 L150,15 L200,35 L250,10 L300,30 L350,20 L400,35 L400,80 Z"
-                      fill="currentColor"
-                    />
-                  </svg>
 
                   {/* Hover overlay with caption */}
                   <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
@@ -388,49 +373,6 @@ export default function GaleriaContent() {
         close={() => setLightboxOpen(false)}
         index={lightboxIndex}
         slides={lightboxSlides}
-        render={{
-          slide: ({ slide, rect }) => {
-            const idx = lightboxSlides.findIndex((s) => s.src === slide.src);
-            const item = filteredItems[idx];
-            if (!item) return null;
-            return (
-              <div
-                className="flex h-full w-full flex-col items-center justify-center"
-                style={{
-                  maxWidth: rect?.width ?? "100%",
-                  maxHeight: rect?.height ?? "100%",
-                }}
-              >
-                <div
-                  className="relative w-full overflow-hidden rounded-lg"
-                  style={{
-                    background: item.gradient,
-                    maxWidth: Math.min(rect?.width ?? 900, 900),
-                    height: Math.min(rect?.height ? rect.height * 0.8 : 600, 600),
-                  }}
-                >
-                  <Mountain
-                    className="absolute top-1/2 left-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 text-white/20"
-                    strokeWidth={1}
-                  />
-                  <svg
-                    className="absolute bottom-0 left-0 w-full text-white/10"
-                    viewBox="0 0 400 80"
-                    preserveAspectRatio="none"
-                  >
-                    <path
-                      d="M0,80 L0,50 L60,25 L100,40 L150,15 L200,35 L250,10 L300,30 L350,20 L400,35 L400,80 Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </div>
-                <p className="mt-4 text-center text-base font-medium text-white">
-                  {item.caption}
-                </p>
-              </div>
-            );
-          },
-        }}
         styles={{
           container: { backgroundColor: "rgba(0, 0, 0, 0.9)" },
         }}

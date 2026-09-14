@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Mountain, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/utils";
@@ -14,6 +15,7 @@ interface RelatedPackage {
   altitude: number;
   duration: { days: number; nights: number };
   placeholderColor: string;
+  image?: string;
 }
 
 interface RelatedPackagesProps {
@@ -26,18 +28,20 @@ function RelatedCard({ pkg }: { pkg: RelatedPackage }) {
       href={`/expediciones/${pkg.slug}`}
       className="group flex-shrink-0 w-[280px] md:w-auto block rounded-xl border border-slate-200 bg-white overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1"
     >
-      {/* Image placeholder */}
-      <div
-        className={cn(
-          "relative h-44 bg-gradient-to-br overflow-hidden",
-          pkg.placeholderColor
+      {/* Card image */}
+      <div className="relative h-44 overflow-hidden">
+        {pkg.image ? (
+          <Image
+            src={pkg.image}
+            alt={pkg.title}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 280px, 33vw"
+          />
+        ) : (
+          <div className={cn("absolute inset-0 bg-gradient-to-br", pkg.placeholderColor)} />
         )}
-      >
-        <Mountain
-          className="absolute top-1/2 left-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 text-white/20"
-          strokeWidth={1}
-          aria-hidden="true"
-        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         <div className="absolute bottom-3 left-3">
           <DifficultyBadge difficulty={pkg.difficulty} size="sm" />
         </div>

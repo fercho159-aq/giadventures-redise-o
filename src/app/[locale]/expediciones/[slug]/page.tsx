@@ -77,6 +77,7 @@ interface RelatedPackage {
   altitude: number;
   duration: Duration;
   placeholderColor: string;
+  image?: string;
 }
 
 interface Package {
@@ -86,6 +87,7 @@ interface Package {
   excerpt: LocalizedString;
   description: LocalizedString;
   mainImageAlt: string;
+  image?: string;
   duration: Duration;
   difficulty: keyof typeof DIFFICULTY_COLORS;
   altitude: number;
@@ -129,6 +131,7 @@ const MOCK_PACKAGE: Package = {
     en: "Pico de Orizaba, also known as Citlaltepetl ('Star Mountain' in Nahuatl), is an inactive stratovolcano and the highest mountain in Mexico at 5,636 meters above sea level. It is also the third highest volcano in North America.\n\nThis expedition is designed for mountaineers with previous high-altitude experience. The ascent follows the Jamapa Glacier route, the classic and most popular path. The expedition includes an acclimatization day in Tlachichuca, ascent to the Piedra Grande refuge (4,260m), and the summit attempt that begins in the early morning hours.\n\nOur certified guides will accompany you throughout the expedition, providing specialized technical equipment and ensuring a safe and unforgettable experience. Pico de Orizaba offers spectacular views of the Gulf of Mexico and the central highlands, making this one of Mexico's most rewarding expeditions.",
   },
   mainImageAlt: "Vista del Pico de Orizaba al amanecer con el glaciar de Jamapa",
+  image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80",
   duration: { days: 3, nights: 2 },
   difficulty: "avanzado",
   altitude: 5636,
@@ -207,60 +210,51 @@ const MOCK_PACKAGE: Package = {
   gallery: [
     {
       type: "image",
-      src: "",
+      src: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80",
       alt: "Cumbre del Pico de Orizaba al amanecer",
       caption: "Amanecer desde la cumbre",
-      placeholderColor: "from-summit-500 to-summit-700",
     },
     {
       type: "image",
-      src: "",
+      src: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
       alt: "Glaciar de Jamapa durante el ascenso nocturno",
       caption: "Glaciar de Jamapa",
-      placeholderColor: "from-slate-600 to-slate-800",
     },
     {
       type: "image",
-      src: "",
+      src: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=800&q=80",
       alt: "Refugio de Piedra Grande al atardecer",
       caption: "Refugio Piedra Grande",
-      placeholderColor: "from-forest-600 to-forest-800",
-    },
-    {
-      type: "video",
-      src: "",
-      alt: "Video del ascenso al Pico de Orizaba",
-      caption: "Ascenso en video",
-      videoUrl: "https://youtube.com/watch?v=example",
-      placeholderColor: "from-slate-700 to-forest-900",
     },
     {
       type: "image",
-      src: "",
+      src: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800&q=80",
+      alt: "Vista panoramica del volcan",
+      caption: "Vista panoramica",
+    },
+    {
+      type: "image",
+      src: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=800&q=80",
       alt: "Equipo de alpinistas en la cumbre",
       caption: "Equipo en la cumbre",
-      placeholderColor: "from-forest-700 to-slate-800",
     },
     {
       type: "image",
-      src: "",
+      src: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80",
       alt: "Vista del crater del Pico de Orizaba",
       caption: "Crater del volcan",
-      placeholderColor: "from-summit-600 to-forest-700",
     },
     {
       type: "image",
-      src: "",
+      src: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80",
       alt: "Practica de crampones cerca del refugio",
       caption: "Practica de crampones",
-      placeholderColor: "from-slate-500 to-slate-700",
     },
     {
       type: "image",
-      src: "",
+      src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
       alt: "Pueblo de Tlachichuca con el volcan de fondo",
       caption: "Tlachichuca",
-      placeholderColor: "from-forest-500 to-forest-700",
     },
   ],
   reviews: [
@@ -305,6 +299,7 @@ const MOCK_PACKAGE: Package = {
       altitude: 5230,
       duration: { days: 2, nights: 1 },
       placeholderColor: "from-forest-600 to-slate-700",
+      image: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&q=75",
     },
     {
       slug: "nevado-de-toluca",
@@ -315,6 +310,7 @@ const MOCK_PACKAGE: Package = {
       altitude: 4680,
       duration: { days: 1, nights: 0 },
       placeholderColor: "from-slate-600 to-forest-800",
+      image: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=600&q=75",
     },
     {
       slug: "cotopaxi-ecuador",
@@ -325,6 +321,7 @@ const MOCK_PACKAGE: Package = {
       altitude: 5897,
       duration: { days: 7, nights: 6 },
       placeholderColor: "from-summit-600 to-slate-800",
+      image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=75",
     },
   ],
   isFeatured: true,
@@ -377,6 +374,7 @@ export default async function PackageDetailPage({
         title={pkg.title[lang]}
         subtitle={pkg.subtitle[lang]}
         mainImageAlt={pkg.mainImageAlt}
+        image={pkg.image}
         duration={pkg.duration}
         altitude={pkg.altitude}
         difficulty={pkg.difficulty}

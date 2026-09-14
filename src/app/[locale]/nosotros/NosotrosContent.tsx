@@ -7,6 +7,7 @@ import {
   useReducedMotion,
   type Variants,
 } from "framer-motion";
+import Image from "next/image";
 import {
   Mountain,
   Heart,
@@ -28,7 +29,7 @@ interface TeamMember {
   roleKey: string;
   certifications: string[];
   yearsExperience: number;
-  gradient: string;
+  image: string;
 }
 
 const TEAM_MEMBERS: TeamMember[] = [
@@ -38,7 +39,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     roleKey: "CEO & Guía Principal",
     certifications: ["Guía de Alta Montaña", "Primeros Auxilios en Montaña"],
     yearsExperience: 10,
-    gradient: "linear-gradient(135deg, #14532d 0%, #15803d 40%, #22c55e 100%)",
+    image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=75",
   },
   {
     id: "2",
@@ -46,7 +47,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     roleKey: "Guía de Expediciones",
     certifications: ["Guía de Media Montaña", "Rescate en Montaña"],
     yearsExperience: 8,
-    gradient: "linear-gradient(135deg, #1e293b 0%, #334155 40%, #94a3b8 100%)",
+    image: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=400&q=75",
   },
   {
     id: "3",
@@ -54,7 +55,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     roleKey: "Guía de Expediciones",
     certifications: ["Guía de Alta Montaña", "Manejo de Cuerdas"],
     yearsExperience: 6,
-    gradient: "linear-gradient(135deg, #431407 0%, #9a3412 40%, #fb923c 100%)",
+    image: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=400&q=75",
   },
   {
     id: "4",
@@ -62,7 +63,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     roleKey: "Guía de Aclimatación",
     certifications: ["Técnico en Montaña", "Primeros Auxilios Wilderness"],
     yearsExperience: 5,
-    gradient: "linear-gradient(135deg, #0c4a6e 0%, #0369a1 40%, #38bdf8 100%)",
+    image: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=400&q=75",
   },
 ];
 
@@ -128,21 +129,18 @@ export default function NosotrosContent() {
       {/* ============================================================ */}
       <section
         ref={heroRef}
-        className="relative overflow-hidden bg-gradient-to-b from-slate-900 to-slate-800 py-20 md:py-28"
+        className="relative overflow-hidden py-20 md:py-28"
         aria-labelledby="about-hero-title"
       >
-        <div className="absolute inset-0" aria-hidden="true">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: [
-                "radial-gradient(ellipse 150% 60% at 20% 90%, #14532d 0%, transparent 50%)",
-                "radial-gradient(ellipse 120% 50% at 80% 80%, #1e293b 0%, transparent 50%)",
-                "linear-gradient(to bottom, #0f172a 0%, #1e293b 60%, #0f172a 100%)",
-              ].join(", "),
-            }}
-          />
-        </div>
+        <Image
+          src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-slate-900/70" />
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <motion.h1
@@ -275,27 +273,16 @@ export default function NosotrosContent() {
                 variants={cardVariant}
                 className="group overflow-hidden rounded-2xl bg-white shadow-md transition-all hover:shadow-xl hover:-translate-y-1"
               >
-                {/* Photo placeholder */}
-                <div
-                  className="relative h-56 w-full overflow-hidden"
-                  style={{ background: member.gradient }}
-                >
-                  <Users
-                    className="absolute top-1/2 left-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 text-white/20"
-                    strokeWidth={1}
-                    aria-hidden="true"
+                {/* Photo */}
+                <div className="relative h-56 w-full overflow-hidden">
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   />
-                  <svg
-                    className="absolute bottom-0 left-0 w-full text-white/10"
-                    viewBox="0 0 400 100"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M0,100 L0,60 L80,30 L150,50 L200,20 L280,45 L350,15 L400,40 L400,100 Z"
-                      fill="currentColor"
-                    />
-                  </svg>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </div>
 
                 {/* Info */}
@@ -340,18 +327,14 @@ export default function NosotrosContent() {
         className="relative overflow-hidden py-16 md:py-24"
         aria-labelledby="about-cta-title"
       >
-        <div className="absolute inset-0" aria-hidden="true">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: [
-                "radial-gradient(ellipse 150% 80% at 30% 100%, #14532d 0%, transparent 50%)",
-                "radial-gradient(ellipse 120% 60% at 70% 90%, #1e293b 0%, transparent 50%)",
-                "linear-gradient(to bottom, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
-              ].join(", "),
-            }}
-          />
-        </div>
+        <Image
+          src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-slate-900/80" />
 
         <div className="relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
           <motion.h2

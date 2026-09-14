@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, Play, ImageIcon, X } from "lucide-react";
+import Image from "next/image";
+import { Camera, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
@@ -12,62 +13,11 @@ interface GalleryItem {
   alt: string;
   caption?: string;
   videoUrl?: string;
-  placeholderColor?: string;
 }
 
 interface MediaGalleryProps {
   items: GalleryItem[];
   maxVisible?: number;
-}
-
-function GalleryPlaceholder({
-  item,
-  index,
-  isLarge = false,
-}: {
-  item: GalleryItem;
-  index: number;
-  isLarge?: boolean;
-}) {
-  const colors = [
-    "from-forest-600 to-forest-800",
-    "from-slate-600 to-slate-800",
-    "from-summit-500 to-summit-700",
-    "from-forest-700 to-slate-800",
-    "from-slate-700 to-forest-900",
-    "from-summit-600 to-forest-700",
-  ];
-
-  const colorClass = item.placeholderColor || colors[index % colors.length];
-
-  return (
-    <div
-      className={cn(
-        "relative w-full h-full bg-gradient-to-br rounded-lg overflow-hidden",
-        colorClass
-      )}
-    >
-      {item.type === "video" ? (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="rounded-full bg-white/20 p-4 backdrop-blur-sm">
-            <Play className={cn("text-white", isLarge ? "h-10 w-10" : "h-6 w-6")} />
-          </div>
-        </div>
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <ImageIcon
-            className={cn("text-white/30", isLarge ? "h-16 w-16" : "h-8 w-8")}
-            strokeWidth={1}
-          />
-        </div>
-      )}
-      {item.caption && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
-          <p className="text-xs text-white/90 font-medium truncate">{item.caption}</p>
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function MediaGallery({
@@ -131,8 +81,29 @@ export default function MediaGallery({
                 )}
                 aria-label={`Ver ${item.type === "video" ? "video" : "imagen"}: ${item.alt}`}
               >
-                <GalleryPlaceholder item={item} index={index} isLarge={isFirst} />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                {item.src ? (
+                  <Image
+                    src={item.src}
+                    alt={item.alt}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes={isFirst ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 50vw, 25vw"}
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-600 to-slate-800" />
+                )}
+                {item.type === "video" && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="rounded-full bg-white/20 p-4 backdrop-blur-sm">
+                      <Play className={cn("text-white", isFirst ? "h-10 w-10" : "h-6 w-6")} />
+                    </div>
+                  </div>
+                )}
+                {item.caption && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-xs text-white/90 font-medium truncate">{item.caption}</p>
+                  </div>
+                )}
               </button>
             );
           })}

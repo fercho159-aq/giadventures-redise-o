@@ -1,14 +1,11 @@
 import { setRequestLocale } from "next-intl/server";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { Mountain, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/utils";
 import { DifficultyBadge } from "@/components/package-detail";
 import type { DIFFICULTY_COLORS } from "@/lib/constants";
-
-/* ------------------------------------------------------------------ */
-/*  Mock packages for listing                                          */
-/* ------------------------------------------------------------------ */
 
 interface MockPackage {
   slug: string;
@@ -20,7 +17,7 @@ interface MockPackage {
   altitude: number;
   duration: { days: number; nights: number };
   location: string;
-  placeholderColor: string;
+  image: string;
 }
 
 const MOCK_PACKAGES: MockPackage[] = [
@@ -34,7 +31,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     altitude: 5636,
     duration: { days: 3, nights: 2 },
     location: "Puebla, Mexico",
-    placeholderColor: "from-forest-700 to-slate-800",
+    image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600&q=75",
   },
   {
     slug: "iztaccihuatl",
@@ -46,7 +43,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     altitude: 5230,
     duration: { days: 2, nights: 1 },
     location: "Estado de Mexico",
-    placeholderColor: "from-forest-600 to-slate-700",
+    image: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&q=75",
   },
   {
     slug: "nevado-de-toluca",
@@ -58,7 +55,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     altitude: 4680,
     duration: { days: 1, nights: 0 },
     location: "Estado de Mexico",
-    placeholderColor: "from-slate-600 to-forest-800",
+    image: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=600&q=75",
   },
   {
     slug: "la-malinche",
@@ -70,7 +67,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     altitude: 4461,
     duration: { days: 1, nights: 0 },
     location: "Tlaxcala, Mexico",
-    placeholderColor: "from-forest-500 to-forest-700",
+    image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=75",
   },
   {
     slug: "cotopaxi-ecuador",
@@ -82,7 +79,7 @@ const MOCK_PACKAGES: MockPackage[] = [
     altitude: 5897,
     duration: { days: 7, nights: 6 },
     location: "Cotopaxi, Ecuador",
-    placeholderColor: "from-summit-600 to-slate-800",
+    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=75",
   },
   {
     slug: "sierra-negra",
@@ -94,13 +91,9 @@ const MOCK_PACKAGES: MockPackage[] = [
     altitude: 4580,
     duration: { days: 2, nights: 1 },
     location: "Puebla, Mexico",
-    placeholderColor: "from-slate-700 to-forest-900",
+    image: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=600&q=75",
   },
 ];
-
-/* ------------------------------------------------------------------ */
-/*  Metadata                                                           */
-/* ------------------------------------------------------------------ */
 
 export async function generateMetadata({
   params,
@@ -117,10 +110,6 @@ export async function generateMetadata({
   };
 }
 
-/* ------------------------------------------------------------------ */
-/*  Page component                                                     */
-/* ------------------------------------------------------------------ */
-
 export default async function ExpedicionesPage({
   params,
 }: {
@@ -131,9 +120,18 @@ export default async function ExpedicionesPage({
 
   return (
     <main className="pt-20 lg:pt-24">
-      {/* Page header */}
-      <section className="bg-gradient-to-b from-slate-900 to-slate-800 py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+      {/* Page header with background image */}
+      <section className="relative overflow-hidden py-16 md:py-24">
+        <Image
+          src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-slate-900/75" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl font-heading font-bold text-white sm:text-4xl md:text-5xl">
             {locale === "en" ? "Our Expeditions" : "Nuestras Expediciones"}
           </h1>
@@ -155,19 +153,20 @@ export default async function ExpedicionesPage({
                 href={`/expediciones/${pkg.slug}`}
                 className="group block rounded-xl border border-slate-200 bg-white overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1"
               >
-                {/* Image placeholder */}
-                <div
-                  className={`relative h-52 bg-gradient-to-br ${pkg.placeholderColor} overflow-hidden`}
-                >
-                  <Mountain
-                    className="absolute top-1/2 left-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 text-white/20"
-                    strokeWidth={1}
-                    aria-hidden="true"
+                {/* Card image */}
+                <div className="relative h-52 overflow-hidden">
+                  <Image
+                    src={pkg.image}
+                    alt={pkg.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <div className="absolute bottom-3 left-3">
                     <DifficultyBadge difficulty={pkg.difficulty} size="sm" />
                   </div>
-                  <div className="absolute top-3 right-3 rounded-full bg-black/30 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white">
+                  <div className="absolute top-3 right-3 rounded-full bg-black/40 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white">
                     {pkg.location}
                   </div>
                 </div>

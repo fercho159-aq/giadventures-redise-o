@@ -7,6 +7,7 @@ import {
   useReducedMotion,
   type Variants,
 } from "framer-motion";
+import Image from "next/image";
 import {
   Mountain,
   Award,
@@ -106,28 +107,15 @@ export default function CeoContent() {
         className="relative overflow-hidden py-20 md:py-28"
         aria-labelledby="ceo-hero-title"
       >
-        {/* Gradient background */}
-        <div className="absolute inset-0" aria-hidden="true">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: [
-                "radial-gradient(ellipse 180% 70% at 50% 90%, #14532d 0%, transparent 50%)",
-                "radial-gradient(ellipse 140% 50% at 20% 80%, #1e293b 0%, transparent 50%)",
-                "radial-gradient(ellipse 120% 40% at 80% 70%, #431407 0%, transparent 50%)",
-                "linear-gradient(to bottom, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
-              ].join(", "),
-            }}
-          />
-          {/* Subtle star overlay */}
-          <div
-            className="absolute inset-0 opacity-20"
-            style={{
-              background:
-                "radial-gradient(1px 1px at 15% 20%, white 1px, transparent 0), radial-gradient(1px 1px at 55% 15%, white 1px, transparent 0), radial-gradient(1px 1px at 75% 25%, white 1px, transparent 0), radial-gradient(1px 1px at 35% 10%, white 1px, transparent 0), radial-gradient(1px 1px at 85% 8%, white 1px, transparent 0)",
-            }}
-          />
-        </div>
+        <Image
+          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-slate-900/70" />
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <motion.h1
@@ -168,33 +156,17 @@ export default function CeoContent() {
             }
             transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
           >
-            {/* Photo placeholder */}
+            {/* Photo */}
             <div className="relative flex-shrink-0">
-              <div
-                className="h-64 w-64 overflow-hidden rounded-2xl shadow-xl sm:h-72 sm:w-72"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #14532d 0%, #15803d 30%, #22c55e 60%, #4ade80 100%)",
-                }}
-              >
-                <Mountain
-                  className="absolute top-1/2 left-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 text-white/20"
-                  strokeWidth={1}
-                  aria-hidden="true"
+              <div className="relative h-64 w-64 overflow-hidden rounded-2xl shadow-xl sm:h-72 sm:w-72">
+                <Image
+                  src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80"
+                  alt={CEO_NAME}
+                  fill
+                  className="object-cover"
+                  sizes="288px"
                 />
-                <svg
-                  className="absolute bottom-0 left-0 w-full text-white/10"
-                  viewBox="0 0 300 80"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M0,80 L0,50 L60,25 L100,40 L150,15 L200,35 L250,10 L300,30 L300,80 Z"
-                    fill="currentColor"
-                  />
-                </svg>
               </div>
-              {/* Decorative ring */}
               <div className="absolute -inset-2 -z-10 rounded-2xl bg-gradient-to-br from-forest-400/30 to-summit-400/30 blur-sm" />
             </div>
 
@@ -374,18 +346,14 @@ export default function CeoContent() {
         className="relative overflow-hidden py-16 md:py-24"
         aria-labelledby="ceo-cta-title"
       >
-        <div className="absolute inset-0" aria-hidden="true">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: [
-                "radial-gradient(ellipse 150% 80% at 30% 100%, #14532d 0%, transparent 50%)",
-                "radial-gradient(ellipse 120% 60% at 70% 90%, #1e293b 0%, transparent 50%)",
-                "linear-gradient(to bottom, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
-              ].join(", "),
-            }}
-          />
-        </div>
+        <Image
+          src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=1920&q=80"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-slate-900/80" />
 
         <div className="relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
           <motion.h2
