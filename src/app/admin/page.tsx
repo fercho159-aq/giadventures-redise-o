@@ -138,7 +138,7 @@ export default async function AdminDashboardPage() {
                       <p className="text-xs text-slate-500">
                         {b.people} {b.people === 1 ? "persona" : "personas"} ·{" "}
                         {new Intl.NumberFormat("es-MX", { style: "currency", currency: b.currency }).format(b.totalPrice)}
-                        {b.paymentMethod === "test" && " · Pago de prueba"}
+                        {b.paymentMethod === "test" && " · Tarjeta"}
                       </p>
                     </div>
                     <span

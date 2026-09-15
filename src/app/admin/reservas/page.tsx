@@ -37,7 +37,8 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const METHOD_LABELS: Record<string, string> = {
-  test: "Prueba",
+  // Demo checkout (no charge) is presented as a card payment
+  test: "Tarjeta",
   stripe: "Stripe",
   paypal: "PayPal",
 };
@@ -253,11 +254,7 @@ export default function ReservasPage() {
                     </option>
                   ))}
                 </select>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                    b.paymentMethod === "test" ? "bg-summit-100 text-summit-700" : "bg-slate-100 text-slate-700"
-                  }`}
-                >
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
                   {METHOD_LABELS[b.paymentMethod ?? ""] ?? "—"}
                 </span>
                 <button
@@ -334,13 +331,7 @@ export default function ReservasPage() {
                       {formatPrice(b.totalPrice, b.currency)}
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          b.paymentMethod === "test"
-                            ? "bg-summit-100 text-summit-700"
-                            : "bg-slate-100 text-slate-700"
-                        }`}
-                      >
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
                         {METHOD_LABELS[b.paymentMethod ?? ""] ?? "—"}
                       </span>
                     </td>
