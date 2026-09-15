@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Expedition {
+  id             String   @id @default(cuid())
+  titleEs        String
+  titleEn        String?
+  slug           String   @unique
+  subtitleEs     String?
+  subtitleEn     String?
+  excerptEs      String?
+  excerptEn      String?
+  descriptionEs  String?
+  descriptionEn  String?
+  mainImage      String?
+  difficulty     String   @default("principiante")
+  altitude       Int?
+  durationDays   Int      @default(1)
+  durationNights Int      @default(0)
+  groupSizeMin   Int?
+  groupSizeMax   Int?
+  locationName   String?
+  locationLat    Float?
+  locationLng    Float?
+  pricePerPerson Float
+  currency       String   @default("MXN")
+  requirementsEs String?
+  requirementsEn String?
+  whatToBringEs   String?
+  whatToBringEn   String?
+  isFeatured     Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  category       String?
+
+  seoTitleEs       String?
+  seoTitleEn       String?
+  seoDescriptionEs String?
+  seoDescriptionEn String?
+  seoImage         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  itinerary     ItineraryDay[]
+  gallery       GalleryItem[]
+  includedItems IncludedItem[]
+  dates         ExpeditionDate[]
+  priceTiers    PriceTier[]
+}
+
+model ItineraryDay {
+  id            String @id @default(cuid())
+  expeditionId  String
+  dayNumber     Int
+  titleEs       String
+  titleEn       String?
+  descriptionEs String?
+  descriptionEn String?
+  elevation     Int?
+  image         String?
+
+  expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+}
+
+model GalleryItem {
+  id           String @id @default(cuid())
+  expeditionId String
+  type         String @default("image")
+  imageUrl     String
+  altText      String?
+  captionEs    String?
+  captionEn    String?
+  sortOrder    Int    @default(0)
+
+  expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+}
+
+model IncludedItem {
+  id           String  @id @default(cuid())
+  expeditionId String
+  textEs       String
+  textEn       String?
+  icon         String?
+  isIncluded   Boolean @default(true)
+
+  expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+}
+
+model ExpeditionDate {
+  id           String   @id @default(cuid())
+  expeditionId String
+  startDate    DateTime
+  endDate      DateTime
+  spotsTotal   Int
+  spotsTaken   Int      @default(0)
+  status       String   @default("available")
+
+  expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+}
+
+model PriceTier {
+  id             String @id @default(cuid())
+  expeditionId   String
+  minPeople      Int
+  maxPeople      Int
+  pricePerPerson Float
+
+  expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+}
