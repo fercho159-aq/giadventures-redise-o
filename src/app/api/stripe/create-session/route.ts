@@ -1,83 +1,64 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { SITE_URL } from "@/lib/constants";
-
-interface BookingPayload {
-  packageName: string;
-  packageSlug: string;
-  pricePerPerson: number;
-  currency: string;
-  participants: number;
-  selectedDate: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-}
+import { BookingError, createBooking, type BookingRequest } from "@/lib/bookings";
+import { isStripeConfigured } from "@/lib/payments";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
+  if (!isStripeConfigured()) {
+    return NextResponse.json({ error: "Stripe no esta configurado" }, { status: 503 });
+  }
+
   try {
-    const body: BookingPayload = await request.json();
+    const body: BookingRequest & { locale?: string } = await request.json();
+    // Default locale (es) has no URL prefix
+    const localePrefix = body.locale === "en" ? "/en" : "";
 
-    const {
-      packageName,
-      packageSlug,
-      pricePerPerson,
-      currency,
-      participants,
-      selectedDate,
-      contactName,
-      contactEmail,
-      contactPhone,
-    } = body;
-
-    if (
-      !packageName ||
-      !packageSlug ||
-      !pricePerPerson ||
-      !participants ||
-      !selectedDate ||
-      !contactName ||
-      !contactEmail
-    ) {
-      return NextResponse.json(
-        { error: "Faltan campos requeridos" },
-        { status: 400 }
-      );
-    }
-
-    const unitAmount = Math.round(pricePerPerson * 100);
+    // Booking is stored as pending; confirmation page marks it paid after Stripe confirms.
+    const booking = await createBooking(body, { paymentMethod: "stripe", status: "pending" });
+    const unitAmount = Math.round((booking.totalPrice / booking.people) * 100);
 
     const session = await getStripe().checkout.sessions.create({
       payment_method_types: ["card"],
-      customer_email: contactEmail,
+      customer_email: booking.customerEmail,
       line_items: [
         {
           price_data: {
-            currency: currency.toLowerCase(),
+            currency: booking.currency.toLowerCase(),
             product_data: {
-              name: packageName,
-              description: `Expedición ${packageName} — ${selectedDate} — ${participants} persona(s)`,
+              name: booking.expeditionName,
+              description: `Expedición ${booking.expeditionName} — ${body.selectedDate} — ${booking.people} persona(s)`,
             },
             unit_amount: unitAmount,
           },
-          quantity: participants,
+          quantity: booking.people,
         },
       ],
       mode: "payment",
-      success_url: `${SITE_URL}/reservar/confirmacion?session_id={CHECKOUT_SESSION_ID}&status=success`,
-      cancel_url: `${SITE_URL}/reservar/${packageSlug}?cancelled=true`,
+      success_url: `${SITE_URL}${localePrefix}/reservar/confirmacion?session_id={CHECKOUT_SESSION_ID}&status=success&booking=${booking.id}`,
+      cancel_url: `${SITE_URL}${localePrefix}/reservar/${body.packageSlug}?cancelled=true`,
       metadata: {
-        packageSlug,
-        packageName,
-        selectedDate,
-        participants: String(participants),
-        contactName,
-        contactPhone,
+        bookingId: booking.id,
+        packageSlug: body.packageSlug,
+        packageName: booking.expeditionName,
+        selectedDate: body.selectedDate,
+        participants: String(booking.people),
+        contactName: booking.customerName,
+        contactPhone: booking.customerPhone ?? "",
       },
+    });
+
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: { paymentId: session.id },
     });
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
+    if (error instanceof BookingError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Stripe session error:", error);
     return NextResponse.json(
       { error: "Error al crear la sesión de pago" },

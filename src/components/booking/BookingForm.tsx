@@ -12,10 +12,11 @@ import {
   AlertCircle,
   ChevronLeft,
   Loader2,
+  FlaskConical,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
-import { cn, formatPrice, formatDate } from "@/lib/utils";
+import { useLocale, useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
+import { cn, formatPrice, formatDate, getUnitPrice, type PriceTierLike } from "@/lib/utils";
 import { DIFFICULTY_COLORS } from "@/lib/constants";
 import PayPalCheckout from "./PayPalCheckout";
 
@@ -25,44 +26,60 @@ interface AvailableDate {
   spots: number;
 }
 
+interface PaymentOptions {
+  stripe: boolean;
+  paypal: boolean;
+  test: boolean;
+}
+
 interface BookingFormProps {
   packageName: string;
   packageSlug: string;
   pricePerPerson: number;
+  priceTiers?: PriceTierLike[];
   currency: string;
   duration: string;
-  altitude: number;
+  altitude: number | null;
   difficulty: string;
   groupSizeMax: number;
   availableDates: AvailableDate[];
+  paymentOptions: PaymentOptions;
   initialDate?: string;
   initialPeople?: number;
   cancelled?: boolean;
 }
 
-type PaymentMethod = "stripe" | "paypal";
+type PaymentMethod = "stripe" | "paypal" | "test";
 type Step = "details" | "payment";
 
 export default function BookingForm({
   packageName,
   packageSlug,
-  pricePerPerson,
+  pricePerPerson: basePrice,
+  priceTiers,
   currency,
   duration,
   altitude,
   difficulty,
   groupSizeMax,
   availableDates,
+  paymentOptions,
   initialDate,
   initialPeople,
   cancelled,
 }: BookingFormProps) {
   const t = useTranslations("booking");
   const tDiff = useTranslations("difficulty");
+  const tPkg = useTranslations("package");
+  const locale = useLocale();
+  const router = useRouter();
 
   const initialDateIdx = initialDate
     ? availableDates.findIndex((d) => d.start === initialDate)
     : -1;
+  const availableMethods = (["test", "stripe", "paypal"] as const).filter(
+    (m) => paymentOptions[m]
+  );
 
   const [step, setStep] = useState<Step>("details");
   const [selectedDateIndex, setSelectedDateIndex] = useState<number>(
@@ -74,14 +91,28 @@ export default function BookingForm({
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | undefined>(
+    availableMethods[0]
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(
     cancelled ? t("paymentCancelled") : null
   );
 
+  const pricePerPerson = getUnitPrice(basePrice, priceTiers, participants);
   const totalPrice = pricePerPerson * participants;
   const selectedDate = availableDates[selectedDateIndex];
+  const maxParticipants = Math.max(1, Math.min(groupSizeMax, selectedDate?.spots ?? groupSizeMax));
+
+  const bookingPayload = () => ({
+    locale,
+    packageSlug,
+    participants,
+    selectedDate: selectedDate.start,
+    contactName,
+    contactEmail,
+    contactPhone,
+  });
 
   const isFormValid =
     contactName.trim().length >= 2 &&
@@ -102,23 +133,40 @@ export default function BookingForm({
       const res = await fetch("/api/stripe/create-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packageName,
-          packageSlug,
-          pricePerPerson,
-          currency,
-          participants,
-          selectedDate: selectedDate.start,
-          contactName,
-          contactEmail,
-          contactPhone,
-        }),
+        body: JSON.stringify(bookingPayload()),
       });
 
       const data = await res.json();
 
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        setError(data.error || t("paymentError"));
+        setIsLoading(false);
+      }
+    } catch {
+      setError(t("paymentError"));
+      setIsLoading(false);
+    }
+  }
+
+  async function handleTestCheckout() {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingPayload()),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.bookingId) {
+        router.push(
+          `/reservar/confirmacion?provider=test&status=success&booking=${data.bookingId}`
+        );
       } else {
         setError(data.error || t("paymentError"));
         setIsLoading(false);
@@ -169,10 +217,12 @@ export default function BookingForm({
             <Clock className="h-4 w-4 text-slate-400" />
             {duration}
           </div>
-          <div className="flex items-center gap-1.5">
-            <Mountain className="h-4 w-4 text-slate-400" />
-            {altitude.toLocaleString("es-MX")} msnm
-          </div>
+          {altitude ? (
+            <div className="flex items-center gap-1.5">
+              <Mountain className="h-4 w-4 text-slate-400" />
+              {altitude.toLocaleString(locale === "en" ? "en-US" : "es-MX")} {tPkg("meters")}
+            </div>
+          ) : null}
           <div className="flex items-center gap-1.5">
             <Users className="h-4 w-4 text-slate-400" />
             {t("maxGroup", { max: groupSizeMax })}
@@ -241,12 +291,20 @@ export default function BookingForm({
                 <Calendar className="h-5 w-5 text-forest-600" />
                 {t("selectDate")}
               </legend>
+              {availableDates.length === 0 && (
+                <p className="mt-4 text-sm text-slate-500">{t("noDates")}</p>
+              )}
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {availableDates.map((date, i) => (
                   <button
                     key={date.start}
                     type="button"
-                    onClick={() => setSelectedDateIndex(i)}
+                    onClick={() => {
+                      setSelectedDateIndex(i);
+                      setParticipants((p) =>
+                        Math.max(1, Math.min(p, date.spots, groupSizeMax))
+                      );
+                    }}
                     className={cn(
                       "rounded-xl border-2 p-4 text-left transition-all",
                       selectedDateIndex === i
@@ -255,11 +313,11 @@ export default function BookingForm({
                     )}
                   >
                     <p className="text-sm font-semibold text-slate-900">
-                      {formatDate(date.start)}
+                      {formatDate(date.start, locale)}
                     </p>
                     {date.end !== date.start && (
                       <p className="text-xs text-slate-500 mt-0.5">
-                        al {formatDate(date.end)}
+                        {t("dateTo", { date: formatDate(date.end, locale) })}
                       </p>
                     )}
                     <p className="mt-2 text-xs font-medium text-forest-600">
@@ -291,9 +349,9 @@ export default function BookingForm({
                 <button
                   type="button"
                   onClick={() =>
-                    setParticipants((p) => Math.min(groupSizeMax, p + 1))
+                    setParticipants((p) => Math.min(maxParticipants, p + 1))
                   }
-                  disabled={participants >= groupSizeMax}
+                  disabled={participants >= maxParticipants}
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-40"
                 >
                   <Plus className="h-4 w-4" />
@@ -377,7 +435,7 @@ export default function BookingForm({
                   <div className="flex justify-between text-slate-600">
                     <span>{t("date")}</span>
                     <span className="font-medium text-slate-900">
-                      {formatDate(selectedDate.start)}
+                      {formatDate(selectedDate.start, locale)}
                     </span>
                   </div>
                 )}
@@ -395,7 +453,7 @@ export default function BookingForm({
                 </div>
                 <div className="border-t border-slate-200 pt-3 flex justify-between">
                   <span className="text-base font-heading font-bold text-slate-900">
-                    Total
+                    {t("total")}
                   </span>
                   <span className="text-xl font-heading font-bold text-forest-700">
                     {formatPrice(totalPrice, currency)}
@@ -430,7 +488,7 @@ export default function BookingForm({
               <div>
                 <span className="text-slate-500">{t("date")}:</span>{" "}
                 <span className="font-medium text-slate-900">
-                  {formatDate(selectedDate.start)}
+                  {formatDate(selectedDate.start, locale)}
                 </span>
               </div>
               <div>
@@ -443,7 +501,7 @@ export default function BookingForm({
               </div>
             </div>
             <div className="mt-4 border-t border-slate-200 pt-3 flex justify-between items-center">
-              <span className="font-heading font-bold text-slate-900">Total</span>
+              <span className="font-heading font-bold text-slate-900">{t("total")}</span>
               <span className="text-2xl font-heading font-bold text-forest-700">
                 {formatPrice(totalPrice, currency)}
               </span>
@@ -457,7 +515,37 @@ export default function BookingForm({
               {t("selectPaymentMethod")}
             </h3>
 
+            {availableMethods.length === 0 && (
+              <p className="text-sm text-slate-600">{t("noPaymentMethods")}</p>
+            )}
+
             <div className="grid gap-3 sm:grid-cols-2">
+              {paymentOptions.test && (
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("test")}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl border-2 p-4 transition-all",
+                    paymentMethod === "test"
+                      ? "border-forest-500 bg-forest-50"
+                      : "border-slate-200 hover:border-slate-300"
+                  )}
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500 text-white">
+                    <FlaskConical className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {t("testPayment")}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {t("testPaymentDescription")}
+                    </p>
+                  </div>
+                </button>
+              )}
+
+              {paymentOptions.stripe && (
               <button
                 type="button"
                 onClick={() => setPaymentMethod("stripe")}
@@ -478,7 +566,9 @@ export default function BookingForm({
                   <p className="text-xs text-slate-500">Visa, Mastercard, Amex</p>
                 </div>
               </button>
+              )}
 
+              {paymentOptions.paypal && (
               <button
                 type="button"
                 onClick={() => setPaymentMethod("paypal")}
@@ -497,11 +587,33 @@ export default function BookingForm({
                   <p className="text-xs text-slate-500">{t("paypalDescription")}</p>
                 </div>
               </button>
+              )}
             </div>
 
             {/* Payment action */}
             <div className="mt-6">
-              {paymentMethod === "stripe" ? (
+              {paymentMethod === "test" ? (
+                <div className="space-y-3">
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                    {t("testPaymentNotice")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleTestCheckout}
+                    disabled={isLoading}
+                    className="w-full rounded-xl bg-summit-500 px-6 py-3.5 text-base font-bold text-white shadow-lg transition-all hover:bg-summit-600 focus:outline-none focus:ring-2 focus:ring-summit-500 focus:ring-offset-2 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        {t("processing")}
+                      </>
+                    ) : (
+                      t("payTest")
+                    )}
+                  </button>
+                </div>
+              ) : paymentMethod === "stripe" ? (
                 <button
                   type="button"
                   onClick={handleStripeCheckout}
@@ -517,11 +629,9 @@ export default function BookingForm({
                     t("payWithStripe")
                   )}
                 </button>
-              ) : (
+              ) : paymentMethod === "paypal" ? (
                 <PayPalCheckout
-                  packageName={packageName}
                   packageSlug={packageSlug}
-                  pricePerPerson={pricePerPerson}
                   currency={currency}
                   participants={participants}
                   selectedDate={selectedDate.start}
@@ -529,7 +639,7 @@ export default function BookingForm({
                   contactEmail={contactEmail}
                   contactPhone={contactPhone}
                 />
-              )}
+              ) : null}
             </div>
 
             <p className="mt-4 text-center text-xs text-slate-500">

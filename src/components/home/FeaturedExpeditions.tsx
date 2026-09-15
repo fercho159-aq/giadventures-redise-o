@@ -8,110 +8,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { cn, formatPrice } from "@/lib/utils";
 import { DIFFICULTY_COLORS } from "@/lib/constants";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type DifficultyKey = keyof typeof DIFFICULTY_COLORS;
-
-interface MockPackage {
-  id: string;
-  title: string;
-  slug: string;
-  difficulty: DifficultyKey;
-  duration: string;
-  altitude: number;
-  price: number;
-  currency: string;
-  country: string;
-  image: string;
-}
-
-// ---------------------------------------------------------------------------
-// Mock data — will be replaced by Sanity fetch (getFeaturedPackagesQuery)
-// ---------------------------------------------------------------------------
-
-const MOCK_PACKAGES: MockPackage[] = [
-  {
-    id: "1",
-    title: "La Malinche",
-    slug: "la-malinche",
-    difficulty: "principiante",
-    duration: "1 día",
-    altitude: 4461,
-    price: 1800,
-    currency: "MXN",
-    country: "México",
-    image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=75",
-  },
-  {
-    id: "2",
-    title: "Nevado de Toluca",
-    slug: "nevado-de-toluca",
-    difficulty: "principiante",
-    duration: "1 día",
-    altitude: 4680,
-    price: 2200,
-    currency: "MXN",
-    country: "México",
-    image: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=600&q=75",
-  },
-  {
-    id: "3",
-    title: "Iztaccíhuatl",
-    slug: "iztaccihuatl",
-    difficulty: "avanzado",
-    duration: "2 días / 1 noche",
-    altitude: 5230,
-    price: 4500,
-    currency: "MXN",
-    country: "México",
-    image: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&q=75",
-  },
-  {
-    id: "4",
-    title: "Pico de Orizaba",
-    slug: "pico-de-orizaba",
-    difficulty: "alto-rendimiento",
-    duration: "3 días / 2 noches",
-    altitude: 5636,
-    price: 7500,
-    currency: "MXN",
-    country: "México",
-    image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600&q=75",
-  },
-  {
-    id: "5",
-    title: "Cotopaxi, Ecuador",
-    slug: "cotopaxi",
-    difficulty: "alto-rendimiento",
-    duration: "5 días / 4 noches",
-    altitude: 5897,
-    price: 25000,
-    currency: "MXN",
-    country: "Ecuador",
-    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=75",
-  },
-  {
-    id: "6",
-    title: "Alpamayo, Perú",
-    slug: "alpamayo",
-    difficulty: "alto-rendimiento",
-    duration: "12 días / 11 noches",
-    altitude: 5947,
-    price: 45000,
-    currency: "MXN",
-    country: "Perú",
-    image: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=600&q=75",
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Gradient backgrounds to simulate unique card images per mountain
-// ---------------------------------------------------------------------------
-
-// Images loaded from Unsplash via next/image
+import type { ExpeditionCard } from "@/lib/expeditions";
 
 // ---------------------------------------------------------------------------
 // Package card component
@@ -120,7 +17,7 @@ const MOCK_PACKAGES: MockPackage[] = [
 function PackageCardHome({
   pkg,
 }: {
-  pkg: MockPackage;
+  pkg: ExpeditionCard;
 }) {
   const tPkg = useTranslations("package");
   const tDiff = useTranslations("difficulty");
@@ -134,13 +31,17 @@ function PackageCardHome({
     >
       {/* Card image */}
       <div className="relative h-48 w-full overflow-hidden sm:h-52">
-        <Image
-          src={pkg.image}
-          alt={pkg.title}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 82vw, (max-width: 1024px) 50vw, 33vw"
-        />
+        {pkg.image ? (
+          <Image
+            src={pkg.image}
+            alt={pkg.title}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 82vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-600 to-forest-800" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
         {/* Country badge (for international) */}
@@ -174,12 +75,14 @@ function PackageCardHome({
             <Clock className="h-4 w-4 text-slate-400" aria-hidden="true" />
             <span>{pkg.duration}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Mountain className="h-4 w-4 text-slate-400" aria-hidden="true" />
-            <span>
-              {pkg.altitude.toLocaleString("es-MX")} {tPkg("meters")}
-            </span>
-          </div>
+          {pkg.altitude ? (
+            <div className="flex items-center gap-2">
+              <Mountain className="h-4 w-4 text-slate-400" aria-hidden="true" />
+              <span>
+                {pkg.altitude.toLocaleString("es-MX")} {tPkg("meters")}
+              </span>
+            </div>
+          ) : null}
         </div>
 
         {/* Price + CTA */}
@@ -187,7 +90,7 @@ function PackageCardHome({
           <div>
             <span className="text-xs text-slate-500">{tPkg("from")}</span>
             <p className="text-xl font-heading font-bold text-forest-700">
-              {formatPrice(pkg.price, pkg.currency)}
+              {formatPrice(pkg.pricePerPerson, pkg.currency)}
               <span className="ml-1 text-xs font-normal text-slate-500">
                 {pkg.currency}
               </span>
@@ -207,16 +110,16 @@ function PackageCardHome({
 // Main section
 // ---------------------------------------------------------------------------
 
-export default function FeaturedExpeditions() {
+export default function FeaturedExpeditions({
+  packages,
+}: {
+  packages: ExpeditionCard[];
+}) {
   const tHome = useTranslations("home");
   const tPkg = useTranslations("package");
   const sectionRef = useRef<HTMLElement>(null);
   const inView = useInView(sectionRef, { once: true, margin: "-80px" });
   const shouldReduceMotion = useReducedMotion();
-
-  // In production, fetch from Sanity:
-  // const packages = await client.fetch(getFeaturedPackagesQuery, { locale });
-  const packages = MOCK_PACKAGES;
 
   const containerVariants: Variants = {
     hidden: {},

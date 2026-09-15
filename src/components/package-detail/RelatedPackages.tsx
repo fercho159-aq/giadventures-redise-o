@@ -12,7 +12,7 @@ interface RelatedPackage {
   difficulty: keyof typeof DIFFICULTY_COLORS;
   pricePerPerson: number;
   currency: string;
-  altitude: number;
+  altitude: number | null;
   duration: { days: number; nights: number };
   placeholderColor: string;
   image?: string;
@@ -53,10 +53,12 @@ function RelatedCard({ pkg }: { pkg: RelatedPackage }) {
           {pkg.title}
         </h3>
         <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
-          <span className="flex items-center gap-1">
-            <Mountain className="h-3 w-3" aria-hidden="true" />
-            {pkg.altitude.toLocaleString("es-MX")} msnm
-          </span>
+          {pkg.altitude ? (
+            <span className="flex items-center gap-1">
+              <Mountain className="h-3 w-3" aria-hidden="true" />
+              {pkg.altitude.toLocaleString("es-MX")} msnm
+            </span>
+          ) : null}
           <span>{pkg.duration.days} dias / {pkg.duration.nights} noches</span>
         </div>
         <div className="mt-3 flex items-center justify-between">

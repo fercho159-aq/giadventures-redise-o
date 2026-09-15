@@ -53,6 +53,7 @@ model Expedition {
   includedItems IncludedItem[]
   dates         ExpeditionDate[]
   priceTiers    PriceTier[]
+  bookings      Booking[]
 }
 
 model ItineraryDay {
@@ -113,4 +114,33 @@ model PriceTier {
   pricePerPerson Float
 
   expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id             String   @id @default(cuid())
+  expeditionId   String?
+  expeditionSlug String?
+  expeditionName String
+  customerName   String
+  customerEmail  String
+  customerPhone  String?
+  people         Int      @default(1)
+  totalPrice     Float
+  currency       String   @default("MXN")
+  // pending | paid | cancelled
+  status         String   @default("pending")
+  // test | stripe | paypal
+  paymentMethod  String?
+  paymentId      String?
+  notes          String?
+  dateSelected   DateTime?
+  dateEnd        DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Bookings survive expedition deletion (expeditionName keeps the record readable)
+  expedition Expedition? @relation(fields: [expeditionId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdAt])
 }

@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { BookingError, createBooking, type BookingRequest } from "@/lib/bookings";
+import { isPayPalConfigured } from "@/lib/payments";
+import { prisma } from "@/lib/prisma";
 
 const PAYPAL_API =
   process.env.NODE_ENV === "production"
@@ -23,39 +26,18 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-interface OrderPayload {
-  packageName: string;
-  packageSlug: string;
-  pricePerPerson: number;
-  currency: string;
-  participants: number;
-  selectedDate: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-}
-
 export async function POST(request: NextRequest) {
+  if (!isPayPalConfigured()) {
+    return NextResponse.json({ error: "PayPal no esta configurado" }, { status: 503 });
+  }
+
   try {
-    const body: OrderPayload = await request.json();
+    const body: BookingRequest = await request.json();
 
-    const {
-      packageName,
-      pricePerPerson,
-      currency,
-      participants,
-      selectedDate,
-      contactName,
-    } = body;
+    // Booking is stored as pending; capture-order marks it paid.
+    const booking = await createBooking(body, { paymentMethod: "paypal", status: "pending" });
 
-    if (!packageName || !pricePerPerson || !participants || !contactName) {
-      return NextResponse.json(
-        { error: "Faltan campos requeridos" },
-        { status: 400 }
-      );
-    }
-
-    const totalAmount = (pricePerPerson * participants).toFixed(2);
+    const totalAmount = booking.totalPrice.toFixed(2);
     const accessToken = await getAccessToken();
 
     const res = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
@@ -68,9 +50,10 @@ export async function POST(request: NextRequest) {
         intent: "CAPTURE",
         purchase_units: [
           {
-            description: `${packageName} — ${selectedDate} — ${participants} persona(s)`,
+            custom_id: booking.id,
+            description: `${booking.expeditionName} — ${body.selectedDate} — ${booking.people} persona(s)`,
             amount: {
-              currency_code: currency.toUpperCase(),
+              currency_code: booking.currency.toUpperCase(),
               value: totalAmount,
             },
           },
@@ -79,8 +62,17 @@ export async function POST(request: NextRequest) {
     });
 
     const order = await res.json();
-    return NextResponse.json({ id: order.id });
+    if (!order.id) {
+      await prisma.booking.update({ where: { id: booking.id }, data: { status: "cancelled" } });
+      return NextResponse.json({ error: "Error al crear la orden de PayPal" }, { status: 502 });
+    }
+
+    await prisma.booking.update({ where: { id: booking.id }, data: { paymentId: order.id } });
+    return NextResponse.json({ id: order.id, bookingId: booking.id });
   } catch (error) {
+    if (error instanceof BookingError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("PayPal create order error:", error);
     return NextResponse.json(
       { error: "Error al crear la orden de PayPal" },

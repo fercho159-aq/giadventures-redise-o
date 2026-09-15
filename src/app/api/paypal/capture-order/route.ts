@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { markBookingPaid } from "@/lib/bookings";
+import { prisma } from "@/lib/prisma";
 
 const PAYPAL_API =
   process.env.NODE_ENV === "production"
@@ -50,7 +52,12 @@ export async function POST(request: NextRequest) {
     const data = await res.json();
 
     if (data.status === "COMPLETED") {
-      return NextResponse.json({ success: true, data });
+      // Look the booking up by the PayPal order id stored at creation (not trusting the client)
+      const booking = await prisma.booking.findFirst({
+        where: { paymentId: orderID, paymentMethod: "paypal" },
+      });
+      if (booking) await markBookingPaid(booking.id);
+      return NextResponse.json({ success: true, bookingId: booking?.id, data });
     }
 
     return NextResponse.json(

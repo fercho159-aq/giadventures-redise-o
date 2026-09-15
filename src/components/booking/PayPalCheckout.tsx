@@ -7,9 +7,7 @@ import { useState } from "react";
 import { AlertCircle } from "lucide-react";
 
 interface PayPalCheckoutProps {
-  packageName: string;
   packageSlug: string;
-  pricePerPerson: number;
   currency: string;
   participants: number;
   selectedDate: string;
@@ -19,9 +17,7 @@ interface PayPalCheckoutProps {
 }
 
 export default function PayPalCheckout({
-  packageName,
   packageSlug,
-  pricePerPerson,
   currency,
   participants,
   selectedDate,
@@ -72,10 +68,7 @@ export default function PayPalCheckout({
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                packageName,
                 packageSlug,
-                pricePerPerson,
-                currency,
                 participants,
                 selectedDate,
                 contactName,
@@ -96,7 +89,9 @@ export default function PayPalCheckout({
             const result = await res.json();
             if (result.success) {
               router.push(
-                `/reservar/confirmacion?provider=paypal&status=success`
+                `/reservar/confirmacion?provider=paypal&status=success${
+                  result.bookingId ? `&booking=${result.bookingId}` : ""
+                }`
               );
             } else {
               setError(result.error || t("paymentError"));

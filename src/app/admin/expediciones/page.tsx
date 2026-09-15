@@ -255,7 +255,8 @@ export default function ExpedicionesPage() {
             </h3>
             <p className="text-sm text-slate-600 mb-6">
               Esta accion no se puede deshacer. Se eliminara permanentemente
-              esta expedicion y toda su informacion asociada.
+              esta expedicion y toda su informacion asociada. Sus reservas se
+              conservan en la seccion Reservas.
             </p>
             <div className="flex items-center justify-end gap-3">
               <button

@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma skills sync || exit 0"
+    "postinstall": "prisma generate || exit 0",
+    "db:seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^10.4.1",

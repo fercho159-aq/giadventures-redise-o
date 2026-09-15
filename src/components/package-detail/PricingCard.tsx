@@ -5,6 +5,7 @@ import { Calendar, Users, Minus, Plus, MessageCircle, ShieldCheck } from "lucide
 import { cn } from "@/lib/utils";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { WHATSAPP_NUMBER } from "@/lib/constants";
+import { Link } from "@/i18n/navigation";
 
 interface AvailableDate {
   startDate: string;
@@ -20,6 +21,7 @@ interface PricingCardProps {
   availableDates: AvailableDate[];
   groupSizeMax: number;
   packageName: string;
+  packageSlug: string;
 }
 
 function DateOption({
@@ -86,11 +88,17 @@ export default function PricingCard({
   availableDates,
   groupSizeMax,
   packageName,
+  packageSlug,
 }: PricingCardProps) {
   const [selectedDateIndex, setSelectedDateIndex] = useState<number | null>(null);
   const [participants, setParticipants] = useState(1);
 
   const totalPrice = pricePerPerson * participants;
+
+  const selectedDate = selectedDateIndex !== null ? availableDates[selectedDateIndex] : undefined;
+  const bookingQuery = new URLSearchParams({ people: String(participants) });
+  if (selectedDate) bookingQuery.set("date", selectedDate.startDate);
+  const bookingHref = `/reservar/${packageSlug}?${bookingQuery.toString()}`;
 
   const whatsappMessage = encodeURIComponent(
     `Hola! Me interesa el paquete: ${packageName}. Podrian darme mas informacion?`
@@ -128,6 +136,11 @@ export default function PricingCard({
               Selecciona una fecha
             </label>
             <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+              {availableDates.length === 0 && (
+                <p className="text-sm text-slate-500">
+                  No hay fechas programadas por ahora. Escribenos para consultar proximas salidas.
+                </p>
+              )}
               {availableDates.map((date, index) => (
                 <DateOption
                   key={date.startDate}
@@ -188,12 +201,12 @@ export default function PricingCard({
           </div>
 
           {/* CTA */}
-          <button
-            type="button"
-            className="w-full rounded-xl bg-summit-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-summit-500/25 transition-all hover:bg-summit-600 hover:shadow-xl hover:shadow-summit-500/30 focus:outline-none focus:ring-2 focus:ring-summit-500 focus:ring-offset-2 active:scale-[0.98]"
+          <Link
+            href={bookingHref}
+            className="block w-full text-center rounded-xl bg-summit-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-summit-500/25 transition-all hover:bg-summit-600 hover:shadow-xl hover:shadow-summit-500/30 focus:outline-none focus:ring-2 focus:ring-summit-500 focus:ring-offset-2 active:scale-[0.98]"
           >
             Reservar ahora
-          </button>
+          </Link>
 
           {/* WhatsApp link */}
           <a
@@ -218,12 +231,12 @@ export default function PricingCard({
               <span className="text-xs font-normal text-slate-500 ml-1">/ persona</span>
             </p>
           </div>
-          <button
-            type="button"
+          <Link
+            href={bookingHref}
             className="rounded-xl bg-summit-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-summit-500/25 transition-all hover:bg-summit-600 active:scale-[0.98]"
           >
             Reservar
-          </button>
+          </Link>
         </div>
       </div>
     </>

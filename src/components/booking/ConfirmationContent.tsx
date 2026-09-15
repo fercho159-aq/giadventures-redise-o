@@ -9,16 +9,23 @@ interface ConfirmationContentProps {
   isSuccess: boolean;
   provider: string;
   sessionId?: string;
+  bookingId?: string;
 }
+
+const PROVIDER_LABELS: Record<string, string> = {
+  paypal: "PayPal",
+  stripe: "Stripe",
+};
 
 export default function ConfirmationContent({
   isSuccess,
   provider,
+  bookingId,
 }: ConfirmationContentProps) {
   const t = useTranslations("booking");
 
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-    "¡Hola! Acabo de realizar una reserva y me gustaría confirmar los detalles."
+    t("whatsappMessage")
   )}`;
 
   if (isSuccess) {
@@ -35,8 +42,15 @@ export default function ConfirmationContent({
         <p className="mt-3 text-slate-600">{t("confirmationMessage")}</p>
 
         <p className="mt-2 text-sm text-slate-500">
-          {t("paymentProvider")}: {provider === "paypal" ? "PayPal" : "Stripe"}
+          {t("paymentProvider")}: {PROVIDER_LABELS[provider] ?? t("testPayment")}
         </p>
+
+        {bookingId && (
+          <p className="mt-1 text-sm text-slate-500">
+            {t("bookingReference")}:{" "}
+            <span className="font-mono font-medium text-slate-700">{bookingId}</span>
+          </p>
+        )}
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link

@@ -94,6 +94,8 @@
     "name": "Nombre",
     "orderSummary": "Resumen del pedido",
     "date": "Fecha",
+    "dateTo": "al {date}",
+    "total": "Total",
     "pricePerPerson": "Precio por persona",
     "expedition": "Expedición",
     "maxGroup": "Máx. {max} personas",
@@ -120,7 +122,15 @@
     "exploreMore": "Explorar más expediciones",
     "contactWhatsApp": "Confirmar por WhatsApp",
     "tryAgain": "Intentar de nuevo",
-    "needHelp": "¿Necesitas ayuda?"
+    "needHelp": "¿Necesitas ayuda?",
+    "whatsappMessage": "¡Hola! Acabo de realizar una reserva y me gustaría confirmar los detalles.",
+    "testPayment": "Pago de prueba",
+    "testPaymentDescription": "Modo prueba: no se realiza ningún cargo",
+    "testPaymentNotice": "Los pagos reales aún no están configurados. Este botón registra la reserva como pagada sin cobrar nada.",
+    "payTest": "Confirmar pago de prueba",
+    "noPaymentMethods": "No hay métodos de pago disponibles en este momento. Contáctanos por WhatsApp para reservar.",
+    "noDates": "No hay fechas disponibles por ahora. Escríbenos por WhatsApp para consultar próximas salidas.",
+    "bookingReference": "Folio de reserva"
   },
   "contact": {
     "title": "Contáctanos",

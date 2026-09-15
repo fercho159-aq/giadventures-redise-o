@@ -6,6 +6,10 @@ import DifficultyLevels from "@/components/home/DifficultyLevels";
 import FeaturedExpeditions from "@/components/home/FeaturedExpeditions";
 import TestimonialsSlider from "@/components/home/TestimonialsSlider";
 import CTASection from "@/components/home/CTASection";
+import { getFeaturedExpeditions } from "@/lib/expeditions";
+
+// Featured expeditions come from the database; render per request so admin edits show immediately
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -27,12 +31,14 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
 
+  const featured = await getFeaturedExpeditions(locale);
+
   return (
     <main>
       <HeroSection />
       <StatsCounter />
       <DifficultyLevels />
-      <FeaturedExpeditions />
+      <FeaturedExpeditions packages={featured} />
       <TestimonialsSlider />
       <CTASection />
     </main>

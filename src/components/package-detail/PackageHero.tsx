@@ -16,9 +16,9 @@ interface PackageHeroProps {
   mainImageAlt: string;
   image?: string;
   duration: { days: number; nights: number };
-  altitude: number;
+  altitude: number | null;
   difficulty: keyof typeof DIFFICULTY_COLORS;
-  groupSize: { min: number; max: number };
+  groupSize: { min: number; max: number } | null;
 }
 
 export default function PackageHero({
@@ -115,25 +115,29 @@ export default function PackageHero({
               {duration.days} dias / {duration.nights} noches
             </span>
 
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium",
-                "bg-white/15 text-white backdrop-blur-sm border border-white/20"
-              )}
-            >
-              <Mountain className="h-4 w-4" aria-hidden="true" />
-              {altitude.toLocaleString("es-MX")} msnm
-            </span>
+            {altitude ? (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium",
+                  "bg-white/15 text-white backdrop-blur-sm border border-white/20"
+                )}
+              >
+                <Mountain className="h-4 w-4" aria-hidden="true" />
+                {altitude.toLocaleString("es-MX")} msnm
+              </span>
+            ) : null}
 
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium",
-                "bg-white/15 text-white backdrop-blur-sm border border-white/20"
-              )}
-            >
-              <Users className="h-4 w-4" aria-hidden="true" />
-              {groupSize.min}-{groupSize.max} personas
-            </span>
+            {groupSize && (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium",
+                  "bg-white/15 text-white backdrop-blur-sm border border-white/20"
+                )}
+              >
+                <Users className="h-4 w-4" aria-hidden="true" />
+                {groupSize.min}-{groupSize.max} personas
+              </span>
+            )}
 
             <DifficultyBadge difficulty={difficulty} size="sm" />
           </div>

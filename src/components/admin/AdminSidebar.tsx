@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Mountain,
+  CalendarCheck,
   LogOut,
   Menu,
   X,
@@ -14,6 +15,7 @@ import {
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/expediciones", label: "Expediciones", icon: Mountain },
+  { href: "/admin/reservas", label: "Reservas", icon: CalendarCheck },
 ];
 
 export default function AdminSidebar() {
