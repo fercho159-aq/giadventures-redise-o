@@ -1,4 +1,5 @@
-import { Mountain, Mail, Phone } from "lucide-react";
+import Image from "next/image";
+import { Mail, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
@@ -20,12 +21,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Column 1: Logo + tagline + socials */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2" aria-label={`${SITE_NAME} - Inicio`}>
-              <Mountain className="h-7 w-7 text-forest-400" />
-              <span className="text-lg font-heading font-bold text-white tracking-wide">
-                ADVENTURES
-                <span className="text-summit-400"> GI</span>
-              </span>
+            <Link href="/" className="flex items-center" aria-label={`${SITE_NAME} - Inicio`}>
+              <Image
+                src="/images/logo-dark.png"
+                alt={SITE_NAME}
+                width={140}
+                height={66}
+                className="h-10 w-auto brightness-0 invert"
+              />
             </Link>
             <p className="text-sm leading-relaxed text-slate-400">
               {t("tagline")}

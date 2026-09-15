@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Montserrat, Inter } from "next/font/google";
+import { Bebas_Neue, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
-const montserrat = Montserrat({
+const bebasNeue = Bebas_Neue({
+  weight: "400",
   subsets: ["latin"],
   variable: "--font-heading",
   display: "swap",
 });
 
-const inter = Inter({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
@@ -34,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       suppressHydrationWarning
-      className={`${montserrat.variable} ${inter.variable}`}
+      className={`${bebasNeue.variable} ${spaceGrotesk.variable}`}
     >
       <body className="min-h-screen antialiased">{children}</body>
     </html>

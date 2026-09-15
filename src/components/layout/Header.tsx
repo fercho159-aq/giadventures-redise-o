@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Mountain, Menu } from "lucide-react";
+import Image from "next/image";
+import { Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -38,31 +39,20 @@ export default function Header() {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 group"
+            className="flex items-center group"
             aria-label={`${SITE_NAME} - Inicio`}
           >
-            <Mountain
+            <Image
+              src="/images/logo-dark.png"
+              alt={SITE_NAME}
+              width={150}
+              height={71}
               className={cn(
-                "h-7 w-7 transition-colors lg:h-8 lg:w-8",
-                scrolled ? "text-forest-700" : "text-white"
+                "h-10 w-auto transition-all lg:h-12",
+                scrolled ? "" : "brightness-0 invert"
               )}
+              priority
             />
-            <span
-              className={cn(
-                "text-lg font-heading font-bold tracking-wide transition-colors lg:text-xl",
-                scrolled ? "text-slate-900" : "text-white"
-              )}
-            >
-              ADVENTURES
-              <span
-                className={cn(
-                  "transition-colors",
-                  scrolled ? "text-summit-500" : "text-summit-400"
-                )}
-              >
-                {" "}GI
-              </span>
-            </span>
           </Link>
 
           {/* Desktop navigation */}

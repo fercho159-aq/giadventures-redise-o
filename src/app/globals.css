@@ -37,8 +37,8 @@
   --color-slate-900: #0f172a;
   --color-slate-950: #020617;
 
-  --font-heading: 'Montserrat', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Bebas Neue', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, sans-serif;
 }
 
 @layer base {
@@ -56,7 +56,9 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    font-weight: 700;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     color: var(--color-slate-900);
   }
 }
