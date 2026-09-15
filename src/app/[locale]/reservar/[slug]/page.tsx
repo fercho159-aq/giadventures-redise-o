@@ -58,11 +58,12 @@ export default async function BookingPage({
           difficulty={pkg.difficulty}
           groupSizeMax={groupSizeMax}
           availableDates={dates}
-          paymentOptions={{
-            stripe: isStripeConfigured(),
-            paypal: isPayPalConfigured(),
-            test: isTestPaymentMode(),
-          }}
+          paymentOptions={
+            // Demo mode: only the simulated card payment is offered
+            isTestPaymentMode()
+              ? { stripe: false, paypal: false, test: true }
+              : { stripe: isStripeConfigured(), paypal: isPayPalConfigured(), test: false }
+          }
           initialDate={query.date}
           initialPeople={query.people ? parseInt(query.people, 10) : undefined}
           cancelled={query.cancelled === "true"}

@@ -124,10 +124,7 @@
     "tryAgain": "Try again",
     "needHelp": "Need help?",
     "whatsappMessage": "Hi! I just made a booking and would like to confirm the details.",
-    "testPayment": "Test payment",
-    "testPaymentDescription": "Test mode: no charge is made",
-    "testPaymentNotice": "Real payments are not configured yet. This button registers the booking as paid without charging anything.",
-    "payTest": "Confirm test payment",
+    "processingPayment": "Processing payment...",
     "noPaymentMethods": "No payment methods are available right now. Contact us on WhatsApp to book.",
     "noDates": "No dates available right now. Message us on WhatsApp to ask about upcoming departures.",
     "bookingReference": "Booking reference"

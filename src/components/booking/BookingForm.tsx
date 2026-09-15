@@ -12,7 +12,6 @@ import {
   AlertCircle,
   ChevronLeft,
   Loader2,
-  FlaskConical,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -155,11 +154,15 @@ export default function BookingForm({
     setError(null);
 
     try {
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingPayload()),
-      });
+      // Demo checkout: a short "processing" pause so it feels like a real payment
+      const [res] = await Promise.all([
+        fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingPayload()),
+        }),
+        new Promise((resolve) => setTimeout(resolve, 2200)),
+      ]);
 
       const data = await res.json();
 
@@ -531,16 +534,15 @@ export default function BookingForm({
                       : "border-slate-200 hover:border-slate-300"
                   )}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500 text-white">
-                    <FlaskConical className="h-5 w-5" />
+                  {/* Demo: looks like a card payment; no card data is requested or charged */}
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-white">
+                    <CreditCard className="h-5 w-5" />
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-semibold text-slate-900">
-                      {t("testPayment")}
+                      {t("creditDebit")}
                     </p>
-                    <p className="text-xs text-slate-500">
-                      {t("testPaymentDescription")}
-                    </p>
+                    <p className="text-xs text-slate-500">Visa, Mastercard, Amex</p>
                   </div>
                 </button>
               )}
@@ -594,9 +596,6 @@ export default function BookingForm({
             <div className="mt-6">
               {paymentMethod === "test" ? (
                 <div className="space-y-3">
-                  <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                    {t("testPaymentNotice")}
-                  </p>
                   <button
                     type="button"
                     onClick={handleTestCheckout}
@@ -606,10 +605,10 @@ export default function BookingForm({
                     {isLoading ? (
                       <>
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        {t("processing")}
+                        {t("processingPayment")}
                       </>
                     ) : (
-                      t("payTest")
+                      `${t("payWithStripe")} · ${formatPrice(totalPrice, currency)}`
                     )}
                   </button>
                 </div>

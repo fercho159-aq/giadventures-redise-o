@@ -42,7 +42,7 @@ export default function ConfirmationContent({
         <p className="mt-3 text-slate-600">{t("confirmationMessage")}</p>
 
         <p className="mt-2 text-sm text-slate-500">
-          {t("paymentProvider")}: {PROVIDER_LABELS[provider] ?? t("testPayment")}
+          {t("paymentProvider")}: {PROVIDER_LABELS[provider] ?? t("creditDebit")}
         </p>
 
         {bookingId && (
