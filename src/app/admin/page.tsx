@@ -17,7 +17,9 @@ export default async function AdminDashboardPage() {
       prisma.expedition.count({ where: { isFeatured: true } }),
     ]);
     stats = { total, active, featured };
-  } catch {
+  } catch (error) {
+    console.error("[Admin Dashboard] DB Error:", error);
+    console.error("[Admin Dashboard] DATABASE_URL set:", !!process.env.DATABASE_URL);
     dbError = true;
   }
 
