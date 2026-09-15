@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import { Upload, X } from "lucide-react";
+import { uploadPhoto } from "@/lib/admin/resize-image";
 
 interface ImageUploaderProps {
   value?: string;
@@ -26,21 +27,7 @@ export default function ImageUploader({
       setUploading(true);
 
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch("/api/admin/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Error al subir la imagen");
-        }
-
-        const data = await res.json();
-        onChange(data.url);
+        onChange(await uploadPhoto(file));
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Error al subir la imagen"
@@ -90,7 +77,7 @@ export default function ImageUploader({
       )}
 
       {value ? (
-        <div className="relative group">
+        <div className="fm-imagen relative group">
           <div className="relative w-full h-48 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
             <Image
               src={value}
@@ -103,8 +90,9 @@ export default function ImageUploader({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+            className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-md"
             title="Eliminar imagen"
+            aria-label="Eliminar imagen"
           >
             <X className="w-4 h-4" />
           </button>
@@ -115,7 +103,7 @@ export default function ImageUploader({
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+          className={`fm-subir border-2 border-dashed rounded-lg p-6 sm:p-8 text-center cursor-pointer transition-colors ${
             dragOver
               ? "border-forest-500 bg-forest-50"
               : "border-slate-300 hover:border-slate-400 bg-slate-50"
@@ -130,10 +118,11 @@ export default function ImageUploader({
             <div className="flex flex-col items-center">
               <Upload className="w-8 h-8 text-slate-400 mb-2" />
               <p className="text-sm text-slate-600">
-                Haz clic o arrastra una imagen
+                <span className="sm:hidden">Toca para subir una foto</span>
+                <span className="hidden sm:inline">Haz clic o arrastra una imagen</span>
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                PNG, JPG, WebP hasta 5MB
+                JPG o PNG · se optimiza sola al subir
               </p>
             </div>
           )}

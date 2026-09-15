@@ -17,9 +17,10 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col lg:flex-row min-h-screen">
       <AdminSidebar />
-      <main className="flex-1 bg-slate-50 min-h-screen">{children}</main>
+      {/* min-w-0: wide tables/tabs scroll inside their own box instead of widening the page on phones */}
+      <main className="flex-1 min-w-0 bg-slate-50 min-h-screen">{children}</main>
     </div>
   );
 }

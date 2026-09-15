@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 import { verifySession } from "@/lib/admin/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
@@ -12,7 +13,8 @@ const ALLOWED_TYPES = [
   "image/svg+xml",
 ];
 
-const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+// Photos are downscaled in the browser first; Vercel caps request bodies at 4.5 MB
+const MAX_SIZE = 4.5 * 1024 * 1024;
 
 export async function POST(request: Request) {
   const isAuth = await verifySession();
@@ -33,16 +35,14 @@ export async function POST(request: Request) {
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        {
-          error: `Tipo de archivo no permitido: ${file.type}. Tipos permitidos: ${ALLOWED_TYPES.join(", ")}`,
-        },
+        { error: "No se pudo leer la foto. Usa una foto JPG o PNG." },
         { status: 400 }
       );
     }
 
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: "El archivo excede el tamano maximo de 10 MB" },
+        { error: "La foto es demasiado pesada. Usa una de menos de 4 MB." },
         { status: 400 }
       );
     }
@@ -53,19 +53,32 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9.\-_]/g, "-")
       .replace(/-+/g, "-");
 
-    const timestamp = Date.now();
-    const filename = `${timestamp}-${originalName}`;
+    const filename = `${Date.now()}-${originalName}`;
 
+    // Production: Vercel Blob (the serverless filesystem is read-only)
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const blob = await put(`expediciones/${filename}`, file, {
+        access: "public",
+        contentType: file.type,
+      });
+      return NextResponse.json({ success: true, url: blob.url, filename });
+    }
+
+    if (process.env.NODE_ENV === "production") {
+      console.error("[Admin Upload] BLOB_READ_WRITE_TOKEN is not set");
+      return NextResponse.json(
+        { error: "El almacenamiento de fotos no esta configurado. Avisa al equipo tecnico." },
+        { status: 503 }
+      );
+    }
+
+    // Local development: public/uploads
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
     await mkdir(uploadsDir, { recursive: true });
-
-    const filePath = path.join(uploadsDir, filename);
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(filePath, buffer);
+    await writeFile(path.join(uploadsDir, filename), buffer);
 
-    const url = `/uploads/${filename}`;
-
-    return NextResponse.json({ success: true, url, filename });
+    return NextResponse.json({ success: true, url: `/uploads/${filename}`, filename });
   } catch (error) {
     console.error("[Admin Upload]", error);
     return NextResponse.json(

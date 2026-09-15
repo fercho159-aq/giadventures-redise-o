@@ -7,6 +7,8 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https' as const, hostname: 'cdn.sanity.io' },
       { protocol: 'https' as const, hostname: 'images.unsplash.com' },
+      // Photos uploaded from the admin (Vercel Blob)
+      { protocol: 'https' as const, hostname: '*.public.blob.vercel-storage.com' },
     ],
   },
   async redirects() {

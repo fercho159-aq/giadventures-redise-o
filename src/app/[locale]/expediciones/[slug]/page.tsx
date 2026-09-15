@@ -1,6 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Backpack, ClipboardCheck } from "lucide-react";
 import {
   PackageHero,
   MediaGallery,
@@ -158,6 +159,36 @@ export default async function PackageDetailPage({
                 included={pkg.included}
                 notIncluded={pkg.notIncluded}
               />
+            )}
+
+            {/* Requirements / what to bring */}
+            {(pkg.requirements || pkg.whatToBring) && (
+              <section aria-label="Requisitos y que llevar" className="py-8 md:py-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                  {pkg.requirements && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-6">
+                      <h2 className="text-xl font-heading font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <ClipboardCheck className="h-5 w-5 text-forest-700" aria-hidden="true" />
+                        {locale === "en" ? "Requirements" : "Requisitos"}
+                      </h2>
+                      <p className="text-sm leading-relaxed text-slate-600 whitespace-pre-line md:text-base">
+                        {pkg.requirements}
+                      </p>
+                    </div>
+                  )}
+                  {pkg.whatToBring && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-6">
+                      <h2 className="text-xl font-heading font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <Backpack className="h-5 w-5 text-forest-700" aria-hidden="true" />
+                        {locale === "en" ? "What to bring" : "Que llevar"}
+                      </h2>
+                      <p className="text-sm leading-relaxed text-slate-600 whitespace-pre-line md:text-base">
+                        {pkg.whatToBring}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
             )}
 
             {/* Reviews */}

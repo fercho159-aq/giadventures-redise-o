@@ -59,7 +59,11 @@ function RelatedCard({ pkg }: { pkg: RelatedPackage }) {
               {pkg.altitude.toLocaleString("es-MX")} msnm
             </span>
           ) : null}
-          <span>{pkg.duration.days} dias / {pkg.duration.nights} noches</span>
+          <span>
+            {pkg.duration.days} {pkg.duration.days === 1 ? "día" : "días"}
+            {pkg.duration.nights > 0 &&
+              ` / ${pkg.duration.nights} ${pkg.duration.nights === 1 ? "noche" : "noches"}`}
+          </span>
         </div>
         <div className="mt-3 flex items-center justify-between">
           <p>

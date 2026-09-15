@@ -115,7 +115,7 @@
     "paypalNotConfigured": "PayPal no está configurado. Contacta al administrador.",
     "confirmationTitle": "Confirmación de reserva",
     "confirmationSuccess": "¡Reserva confirmada!",
-    "confirmationMessage": "Recibirás un correo de confirmación con todos los detalles de tu expedición.",
+    "confirmationMessage": "Guarda tu folio de reserva. Nuestro equipo se pondrá en contacto contigo para confirmar los detalles de tu expedición.",
     "confirmationFailed": "Pago no completado",
     "confirmationFailedMessage": "Hubo un problema al procesar tu pago. Por favor intenta de nuevo o contáctanos por WhatsApp.",
     "paymentProvider": "Pagado con",

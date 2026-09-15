@@ -112,7 +112,8 @@ export default function PackageHero({
               )}
             >
               <Clock className="h-4 w-4" aria-hidden="true" />
-              {duration.days} dias / {duration.nights} noches
+              {duration.days} {duration.days === 1 ? "día" : "días"}
+              {duration.nights > 0 && ` / ${duration.nights} ${duration.nights === 1 ? "noche" : "noches"}`}
             </span>
 
             {altitude ? (

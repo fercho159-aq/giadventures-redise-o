@@ -136,10 +136,10 @@ export default function ReservasPage() {
     value === "all" ? bookings.length : bookings.filter((b) => b.status === value).length;
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="font-heading text-3xl tracking-wider text-slate-900">
+        <h1 className="font-heading text-2xl sm:text-3xl tracking-wider text-slate-900">
           Reservas
         </h1>
         <button
@@ -168,12 +168,12 @@ export default function ReservasPage() {
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="adm-filtros flex gap-2 mb-4 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
         {FILTERS.map((f) => (
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               filter === f.value
                 ? "bg-forest-700 text-white"
                 : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
@@ -203,9 +203,83 @@ export default function ReservasPage() {
         </div>
       )}
 
+      {/* Mobile cards */}
+      {!loading && visible.length > 0 && (
+        <ul className="adm-res-cards md:hidden space-y-3">
+          {visible.map((b) => (
+            <li key={b.id} className="adm-res-card bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-900 truncate">{b.customerName}</p>
+                  <a
+                    href={`mailto:${b.customerEmail}`}
+                    className="block text-xs text-slate-500 truncate hover:text-forest-700"
+                  >
+                    {b.customerEmail}
+                  </a>
+                  {b.customerPhone && <p className="text-xs text-slate-500">{b.customerPhone}</p>}
+                </div>
+                <p className="text-base font-semibold text-slate-900 whitespace-nowrap">
+                  {formatPrice(b.totalPrice, b.currency)}
+                </p>
+              </div>
+
+              <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                <p className="font-medium text-slate-800">
+                  {b.expeditionName}
+                  {!b.expeditionId && <span className="text-xs font-normal text-slate-400"> (eliminada)</span>}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {formatDay(b.dateSelected)}
+                  {b.dateEnd && b.dateEnd !== b.dateSelected && ` – ${formatDay(b.dateEnd)}`}
+                  {" · "}
+                  {b.people} {b.people === 1 ? "persona" : "personas"}
+                </p>
+              </div>
+
+              <div className="mt-3 flex items-center gap-2">
+                <select
+                  value={b.status}
+                  disabled={updatingId === b.id}
+                  onChange={(e) => handleStatusChange(b.id, e.target.value)}
+                  className={`adm-res-estado rounded-full border px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-500 disabled:opacity-50 ${
+                    STATUS_STYLES[b.status] ?? "bg-slate-100 text-slate-700 border-slate-200"
+                  }`}
+                  aria-label="Estado de la reserva"
+                >
+                  {STATUS_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    b.paymentMethod === "test" ? "bg-summit-100 text-summit-700" : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {METHOD_LABELS[b.paymentMethod ?? ""] ?? "—"}
+                </span>
+                <button
+                  onClick={() => setDeleteId(b.id)}
+                  className="ml-auto p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                  title="Eliminar"
+                  aria-label={`Eliminar reserva de ${b.customerName}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="mt-2 text-[11px] text-slate-400">
+                Folio <span className="font-mono">{b.id}</span> · {formatDateTime(b.createdAt)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {/* Table */}
       {!loading && visible.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

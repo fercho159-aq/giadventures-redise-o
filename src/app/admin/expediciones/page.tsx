@@ -78,15 +78,15 @@ export default function ExpedicionesPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="font-heading text-3xl tracking-wider text-slate-900">
+        <h1 className="font-heading text-2xl sm:text-3xl tracking-wider text-slate-900">
           Expediciones
         </h1>
         <Link
           href="/admin/expediciones/nuevo"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-forest-700 text-white rounded-lg text-sm font-medium hover:bg-forest-800 transition-colors"
+          className="adm-nueva inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-forest-700 text-white rounded-lg text-sm font-medium hover:bg-forest-800 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Nueva Expedicion
@@ -132,9 +132,73 @@ export default function ExpedicionesPage() {
         </div>
       )}
 
+      {/* Mobile cards */}
+      {!loading && expeditions.length > 0 && (
+        <ul className="adm-exp-cards sm:hidden space-y-3">
+          {expeditions.map((exp) => (
+            <li
+              key={exp.id}
+              className="adm-exp-card flex gap-3 bg-white rounded-xl border border-slate-200 p-3 shadow-sm"
+            >
+              <Link
+                href={`/admin/expediciones/${exp.id}`}
+                className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100"
+              >
+                {exp.mainImage ? (
+                  <Image src={exp.mainImage} alt={exp.titleEs} fill className="object-cover" sizes="80px" />
+                ) : (
+                  <span className="flex h-full items-center justify-center text-xs text-slate-400">Sin img</span>
+                )}
+              </Link>
+              <div className="min-w-0 flex-1">
+                <Link href={`/admin/expediciones/${exp.id}`} className="block">
+                  <p className="font-medium text-slate-900 truncate">{exp.titleEs}</p>
+                  <p className="text-sm text-slate-600">
+                    {formatPrice(exp.pricePerPerson, exp.currency)}
+                    <span className="text-xs text-slate-400"> · {difficultyLabels[exp.difficulty] || exp.difficulty}</span>
+                  </p>
+                </Link>
+                <div className="mt-2 flex items-center gap-1.5">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      exp.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {exp.isActive ? "Activa" : "Inactiva"}
+                  </span>
+                  {exp.isFeatured && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-summit-100 text-summit-700">
+                      Destacada
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col items-center justify-between">
+                <Link
+                  href={`/admin/expediciones/${exp.id}`}
+                  className="adm-editar p-2 text-slate-500 hover:text-forest-600 hover:bg-slate-100 rounded-lg"
+                  title="Editar"
+                  aria-label={`Editar ${exp.titleEs}`}
+                >
+                  <Pencil className="w-4 h-4" />
+                </Link>
+                <button
+                  onClick={() => setDeleteId(exp.id)}
+                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                  title="Eliminar"
+                  aria-label={`Eliminar ${exp.titleEs}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {/* Table */}
       {!loading && expeditions.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="hidden sm:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

@@ -3,6 +3,28 @@ import { verifySession } from "@/lib/admin/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
+function StatCard({
+  href,
+  label,
+  value,
+  color,
+}: {
+  href: string;
+  label: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="block bg-white rounded-xl border border-slate-200 p-3 sm:p-6 shadow-sm hover:border-slate-300 transition-colors"
+    >
+      <p className="text-xs sm:text-sm text-slate-500 mb-1 truncate">{label}</p>
+      <p className={`text-2xl sm:text-3xl font-semibold ${color}`}>{value}</p>
+    </Link>
+  );
+}
+
 export default async function AdminDashboardPage() {
   const isAuth = await verifySession();
   if (!isAuth) redirect("/admin/login");
@@ -30,15 +52,23 @@ export default async function AdminDashboardPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-heading text-3xl tracking-wider text-slate-900">
-          Panel de Administracion
-        </h1>
-        <p className="text-slate-500 mt-1">
-          Bienvenido al panel de administracion de Adventures GI
-        </p>
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl sm:text-3xl tracking-wider text-slate-900">
+            Panel de Administracion
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 mt-1">
+            Bienvenido al panel de administracion de Adventures GI
+          </p>
+        </div>
+        <Link
+          href="/admin/expediciones/nuevo"
+          className="adm-nueva inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-forest-700 text-white rounded-lg text-sm font-medium hover:bg-forest-800 transition-colors"
+        >
+          + Nueva Expedicion
+        </Link>
       </div>
 
       {dbError ? (
@@ -62,51 +92,27 @@ export default async function AdminDashboardPage() {
       ) : (
         <>
           {/* Stats cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <p className="text-sm text-slate-500 mb-1">Total expediciones</p>
-              <p className="text-3xl font-semibold text-slate-900">
-                {stats.total}
-              </p>
-            </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <p className="text-sm text-slate-500 mb-1">Activas</p>
-              <p className="text-3xl font-semibold text-forest-700">
-                {stats.active}
-              </p>
-            </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <p className="text-sm text-slate-500 mb-1">Destacadas</p>
-              <p className="text-3xl font-semibold text-summit-600">
-                {stats.featured}
-              </p>
-            </div>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+            Expediciones
+          </h2>
+          <div className="adm-stats-exp grid grid-cols-3 gap-2 sm:gap-4 mb-6">
+            <StatCard href="/admin/expediciones" label="Total" value={stats.total} color="text-slate-900" />
+            <StatCard href="/admin/expediciones" label="Activas" value={stats.active} color="text-forest-700" />
+            <StatCard href="/admin/expediciones" label="Destacadas" value={stats.featured} color="text-summit-600" />
           </div>
 
           {/* Booking stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <p className="text-sm text-slate-500 mb-1">Reservas</p>
-              <p className="text-3xl font-semibold text-slate-900">
-                {stats.bookings}
-              </p>
-            </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <p className="text-sm text-slate-500 mb-1">Pagadas</p>
-              <p className="text-3xl font-semibold text-forest-700">
-                {stats.paid}
-              </p>
-            </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <p className="text-sm text-slate-500 mb-1">Pendientes</p>
-              <p className="text-3xl font-semibold text-summit-600">
-                {stats.pending}
-              </p>
-            </div>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+            Reservas
+          </h2>
+          <div className="adm-stats-res grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
+            <StatCard href="/admin/reservas" label="Total" value={stats.bookings} color="text-slate-900" />
+            <StatCard href="/admin/reservas" label="Pagadas" value={stats.paid} color="text-forest-700" />
+            <StatCard href="/admin/reservas" label="Pendientes" value={stats.pending} color="text-summit-600" />
           </div>
 
           {/* Recent bookings */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm mb-8">
+          <div className="adm-recientes bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-sm mb-6 sm:mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading text-xl tracking-wider text-slate-900">
                 Ultimas reservas
@@ -153,11 +159,11 @@ export default async function AdminDashboardPage() {
           </div>
 
           {/* Quick actions */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-sm">
             <h2 className="font-heading text-xl tracking-wider text-slate-900 mb-4">
               Acciones rapidas
             </h2>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 sm:gap-3">
               <Link
                 href="/admin/expediciones/nuevo"
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-forest-700 text-white rounded-lg text-sm font-medium hover:bg-forest-800 transition-colors"

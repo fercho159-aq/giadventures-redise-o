@@ -115,7 +115,7 @@
     "paypalNotConfigured": "PayPal is not configured. Please contact the administrator.",
     "confirmationTitle": "Booking confirmation",
     "confirmationSuccess": "Booking confirmed!",
-    "confirmationMessage": "You will receive a confirmation email with all the details of your expedition.",
+    "confirmationMessage": "Keep your booking reference. Our team will contact you to confirm the details of your expedition.",
     "confirmationFailed": "Payment not completed",
     "confirmationFailedMessage": "There was a problem processing your payment. Please try again or contact us on WhatsApp.",
     "paymentProvider": "Paid with",

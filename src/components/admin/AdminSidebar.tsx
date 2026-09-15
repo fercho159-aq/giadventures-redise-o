@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Mountain,
   CalendarCheck,
+  ExternalLink,
   LogOut,
   Menu,
   X,
@@ -73,7 +74,16 @@ export default function AdminSidebar() {
       </nav>
 
       {/* Logout */}
-      <div className="px-3 py-4 border-t border-slate-700">
+      <div className="px-3 py-4 border-t border-slate-700 space-y-1">
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="adm-ver-web flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+        >
+          <ExternalLink className="w-5 h-5" />
+          Ver la web
+        </a>
         <button
           onClick={handleLogout}
           disabled={loggingOut}
@@ -88,14 +98,22 @@ export default function AdminSidebar() {
 
   return (
     <>
-      {/* Mobile toggle button */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-900 text-white rounded-lg shadow-lg"
-        aria-label="Abrir menu"
-      >
-        <Menu className="w-5 h-5" />
-      </button>
+      {/* Mobile top bar */}
+      <header className="lg:hidden adm-topbar sticky top-0 z-40 flex items-center justify-between gap-3 bg-slate-900 px-4 py-3 text-white shadow-md">
+        <div className="min-w-0">
+          <p className="font-heading text-xl leading-none tracking-wider">ADVENTURES GI</p>
+          <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+            {navItems.find((item) => isActive(item.href))?.label ?? "Panel Admin"}
+          </p>
+        </div>
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="adm-menu-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-white"
+          aria-label="Abrir menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      </header>
 
       {/* Mobile overlay */}
       {mobileOpen && (
@@ -122,7 +140,7 @@ export default function AdminSidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:block w-64 bg-slate-900 text-white shrink-0">
+      <aside className="hidden lg:block w-64 bg-slate-900 text-white shrink-0 sticky top-0 h-screen">
         {sidebarContent}
       </aside>
     </>

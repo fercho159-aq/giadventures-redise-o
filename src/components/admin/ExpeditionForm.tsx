@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "./ImageUploader";
+import { uploadPhoto } from "@/lib/admin/resize-image";
 import Image from "next/image";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 
@@ -282,10 +283,11 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer">
+    <label className="fm-toggle flex items-center gap-3 cursor-pointer">
       <button
         type="button"
         role="switch"
+        aria-label={label}
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -324,6 +326,24 @@ export default function ExpeditionForm({
   const [form, setForm] = useState<ExpeditionData>(() =>
     getDefaults(expedition)
   );
+  // Snapshot of the last saved state, to tell the user about unsaved changes
+  const [savedSnapshot, setSavedSnapshot] = useState(() =>
+    JSON.stringify(getDefaults(expedition))
+  );
+  const [justSaved, setJustSaved] = useState(false);
+  const [slugTouched, setSlugTouched] = useState(false);
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  // On phones the tab bar scrolls sideways: keep the active tab in view
+  useEffect(() => {
+    const bar = tabsRef.current;
+    const tab = bar?.querySelector<HTMLElement>(`[data-tab="${activeTab}"]`);
+    if (!bar || !tab) return;
+    bar.scrollTo({ left: tab.offsetLeft - (bar.clientWidth - tab.offsetWidth) / 2, behavior: "smooth" });
+  }, [activeTab]);
+  const [galleryUploading, setGalleryUploading] = useState(0);
+  const [galleryError, setGalleryError] = useState("");
+  const isDirty = JSON.stringify(form) !== savedSnapshot;
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -334,6 +354,7 @@ export default function ExpeditionForm({
   /* ---- field helpers ---- */
 
   function set<K extends keyof ExpeditionData>(key: K, value: ExpeditionData[K]) {
+    setJustSaved(false);
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -344,7 +365,8 @@ export default function ExpeditionForm({
 
   function handleTitleEsChange(value: string) {
     set("titleEs", value);
-    if (!isEdit && !form.slug) {
+    // New expeditions: the slug follows the title until the user edits it by hand
+    if (!isEdit && !slugTouched) {
       set("slug", generateSlug(value));
     }
   }
@@ -468,19 +490,6 @@ export default function ExpeditionForm({
 
   /* ---- gallery ---- */
 
-  function addGalleryItem(url: string) {
-    set("gallery", [
-      ...form.gallery,
-      {
-        imageUrl: url,
-        altText: "",
-        captionEs: "",
-        captionEn: "",
-        sortOrder: form.gallery.length,
-      },
-    ]);
-  }
-
   function removeGalleryItem(index: number) {
     set(
       "gallery",
@@ -549,11 +558,9 @@ export default function ExpeditionForm({
       }
 
       if (isEdit) {
-        setMessage({
-          type: "success",
-          text: "Expedicion actualizada correctamente",
-        });
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        setSavedSnapshot(JSON.stringify(form));
+        setJustSaved(true);
+        setMessage(null);
       } else {
         router.push("/admin/expediciones");
       }
@@ -571,27 +578,31 @@ export default function ExpeditionForm({
 
   /* ---- Gallery file upload handler ---- */
 
-  function handleGalleryFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files) return;
-
-    Array.from(files).forEach(async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      try {
-        const res = await fetch("/api/admin/upload", {
-          method: "POST",
-          body: formData,
-        });
-        if (res.ok) {
-          const data = await res.json();
-          addGalleryItem(data.url);
-        }
-      } catch {
-        // silently fail individual uploads
-      }
-    });
+  async function handleGalleryFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files ? Array.from(e.target.files) : [];
     e.target.value = "";
+    if (files.length === 0) return;
+
+    setGalleryError("");
+    setGalleryUploading((n) => n + files.length);
+    // One at a time keeps the gallery order and the phone's memory under control
+    for (const file of files) {
+      try {
+        const url = await uploadPhoto(file);
+        setJustSaved(false);
+        setForm((prev) => ({
+          ...prev,
+          gallery: [
+            ...prev.gallery,
+            { imageUrl: url, altText: "", captionEs: "", captionEn: "", sortOrder: prev.gallery.length },
+          ],
+        }));
+      } catch (err) {
+        setGalleryError(err instanceof Error ? err.message : "Error al subir la imagen");
+      } finally {
+        setGalleryUploading((n) => n - 1);
+      }
+    }
   }
 
   /* ================================================================ */
@@ -624,14 +635,15 @@ export default function ExpeditionForm({
       )}
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 mb-6 overflow-x-auto">
+      <div ref={tabsRef} className="fm-tabs border-b border-slate-200 mb-6 overflow-x-auto">
         <nav className="flex gap-0 min-w-max" aria-label="Tabs">
           {TABS.map((tab, i) => (
             <button
               key={tab}
               type="button"
+              data-tab={i}
               onClick={() => setActiveTab(i)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`fm-tab px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === i
                   ? "border-forest-600 text-forest-700"
                   : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
@@ -644,13 +656,14 @@ export default function ExpeditionForm({
       </div>
 
       {/* Tab panels */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="fm-panel bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6">
         {/* ========== TAB 0: General ========== */}
         {activeTab === 0 && (
           <div className="space-y-5 max-w-3xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <Input
+                  id="fm-titulo-es"
                   label="Titulo (ES) *"
                   value={form.titleEs}
                   onChange={(e) => handleTitleEsChange(e.target.value)}
@@ -661,6 +674,7 @@ export default function ExpeditionForm({
                 )}
               </div>
               <Input
+                id="fm-titulo-en"
                 label="Titulo (EN)"
                 value={form.titleEn}
                 onChange={(e) => set("titleEn", e.target.value)}
@@ -669,19 +683,25 @@ export default function ExpeditionForm({
             </div>
 
             <Input
+              id="fm-slug"
               label="Slug"
               value={form.slug}
-              onChange={(e) => set("slug", e.target.value)}
+              onChange={(e) => {
+                setSlugTouched(true);
+                set("slug", e.target.value);
+              }}
               placeholder="pico-de-orizaba"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Input
+                id="fm-subtitulo-es"
                 label="Subtitulo (ES)"
                 value={form.subtitleEs}
                 onChange={(e) => set("subtitleEs", e.target.value)}
               />
               <Input
+                id="fm-subtitulo-en"
                 label="Subtitulo (EN)"
                 value={form.subtitleEn}
                 onChange={(e) => set("subtitleEn", e.target.value)}
@@ -690,6 +710,7 @@ export default function ExpeditionForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Textarea
+                id="fm-extracto-es"
                 label="Extracto (ES)"
                 value={form.excerptEs}
                 onChange={(e) => set("excerptEs", e.target.value)}
@@ -697,6 +718,7 @@ export default function ExpeditionForm({
                 placeholder="Breve descripcion para listados..."
               />
               <Textarea
+                id="fm-extracto-en"
                 label="Extracto (EN)"
                 value={form.excerptEn}
                 onChange={(e) => set("excerptEn", e.target.value)}
@@ -706,12 +728,14 @@ export default function ExpeditionForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Select
+                id="fm-categoria"
                 label="Categoria"
                 value={form.category}
                 onChange={(e) => set("category", e.target.value)}
                 options={CATEGORIES}
               />
               <Select
+                id="fm-dificultad"
                 label="Dificultad"
                 value={form.difficulty}
                 onChange={(e) => set("difficulty", e.target.value)}
@@ -734,6 +758,7 @@ export default function ExpeditionForm({
 
             <div className="max-w-[200px]">
               <Input
+                id="fm-orden"
                 label="Orden"
                 type="number"
                 value={form.sortOrder}
@@ -747,6 +772,7 @@ export default function ExpeditionForm({
         {activeTab === 1 && (
           <div className="space-y-5 max-w-3xl">
             <Textarea
+              id="fm-descripcion-es"
               label="Descripcion (ES)"
               value={form.descriptionEs}
               onChange={(e) => set("descriptionEs", e.target.value)}
@@ -754,6 +780,7 @@ export default function ExpeditionForm({
               placeholder="Descripcion completa de la expedicion..."
             />
             <Textarea
+              id="fm-descripcion-en"
               label="Descripcion (EN)"
               value={form.descriptionEn}
               onChange={(e) => set("descriptionEn", e.target.value)}
@@ -763,6 +790,7 @@ export default function ExpeditionForm({
             <SectionTitle>Duracion</SectionTitle>
             <div className="grid grid-cols-2 gap-5 max-w-sm">
               <Input
+                id="fm-dias"
                 label="Dias"
                 type="number"
                 min={1}
@@ -772,6 +800,7 @@ export default function ExpeditionForm({
                 }
               />
               <Input
+                id="fm-noches"
                 label="Noches"
                 type="number"
                 min={0}
@@ -784,6 +813,7 @@ export default function ExpeditionForm({
 
             <div className="max-w-sm">
               <Input
+                id="fm-altitud"
                 label="Altitud (metros)"
                 type="number"
                 value={form.altitude ?? ""}
@@ -800,6 +830,7 @@ export default function ExpeditionForm({
             <SectionTitle>Tamano de grupo</SectionTitle>
             <div className="grid grid-cols-2 gap-5 max-w-sm">
               <Input
+                id="fm-grupo-min"
                 label="Minimo"
                 type="number"
                 min={1}
@@ -812,6 +843,7 @@ export default function ExpeditionForm({
                 }
               />
               <Input
+                id="fm-grupo-max"
                 label="Maximo"
                 type="number"
                 min={1}
@@ -827,6 +859,7 @@ export default function ExpeditionForm({
 
             <SectionTitle>Ubicacion</SectionTitle>
             <Input
+              id="fm-ubicacion"
               label="Nombre de ubicacion"
               value={form.locationName}
               onChange={(e) => set("locationName", e.target.value)}
@@ -834,6 +867,7 @@ export default function ExpeditionForm({
             />
             <div className="grid grid-cols-2 gap-5 max-w-sm">
               <Input
+                id="fm-lat"
                 label="Latitud"
                 type="number"
                 step="any"
@@ -846,6 +880,7 @@ export default function ExpeditionForm({
                 }
               />
               <Input
+                id="fm-lng"
                 label="Longitud"
                 type="number"
                 step="any"
@@ -867,11 +902,14 @@ export default function ExpeditionForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-md">
               <div>
                 <Input
+                  id="fm-precio"
                   label="Precio por persona *"
                   type="number"
                   min={0}
                   step="0.01"
-                  value={form.pricePerPerson}
+                  // Empty instead of "0", so typing a price doesn't produce "032000"
+                  value={form.pricePerPerson || ""}
+                  placeholder="Ej: 8500"
                   onChange={(e) =>
                     set("pricePerPerson", parseFloat(e.target.value) || 0)
                   }
@@ -883,6 +921,7 @@ export default function ExpeditionForm({
                 )}
               </div>
               <Select
+                id="fm-moneda"
                 label="Moneda"
                 value={form.currency}
                 onChange={(e) => set("currency", e.target.value)}
@@ -903,10 +942,11 @@ export default function ExpeditionForm({
             {form.priceTiers.map((tier, i) => (
               <div
                 key={i}
-                className="flex flex-wrap items-end gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200"
+                className="fm-nivel grid grid-cols-3 sm:flex sm:flex-wrap items-end gap-3 p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-200"
               >
-                <div className="w-28">
+                <div className="sm:w-28">
                   <Input
+                    id={`fm-nivel-min-${i}`}
                     label="Min personas"
                     type="number"
                     min={1}
@@ -916,8 +956,9 @@ export default function ExpeditionForm({
                     }
                   />
                 </div>
-                <div className="w-28">
+                <div className="sm:w-28">
                   <Input
+                    id={`fm-nivel-max-${i}`}
                     label="Max personas"
                     type="number"
                     min={1}
@@ -927,8 +968,9 @@ export default function ExpeditionForm({
                     }
                   />
                 </div>
-                <div className="w-36">
+                <div className="sm:w-36">
                   <Input
+                    id={`fm-nivel-precio-${i}`}
                     label="Precio"
                     type="number"
                     min={0}
@@ -946,7 +988,7 @@ export default function ExpeditionForm({
                 <button
                   type="button"
                   onClick={() => removePriceTier(i)}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                  className="col-span-3 sm:col-span-1 justify-self-end p-2 text-red-500 hover:bg-red-50 rounded-lg"
                   title="Eliminar nivel"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -971,11 +1013,12 @@ export default function ExpeditionForm({
             {form.dates.map((date, i) => (
               <div
                 key={i}
-                className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3"
+                className="fm-fecha p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3"
               >
-                <div className="flex flex-wrap items-end gap-3">
-                  <div className="w-44">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-end gap-3">
+                  <div className="sm:w-44">
                     <Input
+                      id={`fm-fecha-inicio-${i}`}
                       label="Fecha inicio"
                       type="date"
                       value={date.startDate}
@@ -984,16 +1027,18 @@ export default function ExpeditionForm({
                       }
                     />
                   </div>
-                  <div className="w-44">
+                  <div className="sm:w-44">
                     <Input
+                      id={`fm-fecha-fin-${i}`}
                       label="Fecha fin"
                       type="date"
                       value={date.endDate}
                       onChange={(e) => updateDate(i, "endDate", e.target.value)}
                     />
                   </div>
-                  <div className="w-28">
+                  <div className="sm:w-28">
                     <Input
+                      id={`fm-fecha-lugares-${i}`}
                       label="Lugares"
                       type="number"
                       min={0}
@@ -1007,8 +1052,9 @@ export default function ExpeditionForm({
                       }
                     />
                   </div>
-                  <div className="w-28">
+                  <div className="sm:w-28">
                     <Input
+                      id={`fm-fecha-tomados-${i}`}
                       label="Tomados"
                       type="number"
                       min={0}
@@ -1022,8 +1068,9 @@ export default function ExpeditionForm({
                       }
                     />
                   </div>
-                  <div className="w-40">
+                  <div className="sm:w-40">
                     <Select
+                      id={`fm-fecha-estado-${i}`}
                       label="Estado"
                       value={date.status}
                       onChange={(e) => updateDate(i, "status", e.target.value)}
@@ -1033,7 +1080,7 @@ export default function ExpeditionForm({
                   <button
                     type="button"
                     onClick={() => removeDate(i)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                    className="justify-self-end p-2 text-red-500 hover:bg-red-50 rounded-lg"
                     title="Eliminar fecha"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1079,6 +1126,7 @@ export default function ExpeditionForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
+                    id={`fm-dia-titulo-es-${i}`}
                     label="Titulo (ES)"
                     value={day.titleEs}
                     onChange={(e) =>
@@ -1087,6 +1135,7 @@ export default function ExpeditionForm({
                     placeholder="Ej: Llegada al campamento base"
                   />
                   <Input
+                    id={`fm-dia-titulo-en-${i}`}
                     label="Titulo (EN)"
                     value={day.titleEn}
                     onChange={(e) =>
@@ -1096,6 +1145,7 @@ export default function ExpeditionForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Textarea
+                    id={`fm-dia-desc-es-${i}`}
                     label="Descripcion (ES)"
                     value={day.descriptionEs}
                     onChange={(e) =>
@@ -1104,6 +1154,7 @@ export default function ExpeditionForm({
                     rows={4}
                   />
                   <Textarea
+                    id={`fm-dia-desc-en-${i}`}
                     label="Descripcion (EN)"
                     value={day.descriptionEn}
                     onChange={(e) =>
@@ -1114,6 +1165,7 @@ export default function ExpeditionForm({
                 </div>
                 <div className="max-w-[200px]">
                   <Input
+                    id={`fm-dia-elevacion-${i}`}
                     label="Elevacion (m)"
                     type="number"
                     value={day.elevation ?? ""}
@@ -1158,6 +1210,7 @@ export default function ExpeditionForm({
                     >
                       <div className="flex-1 min-w-[180px]">
                         <Input
+                          id={`fm-item-es-${i}`}
                           label="Texto (ES)"
                           value={item.textEs}
                           onChange={(e) =>
@@ -1167,6 +1220,7 @@ export default function ExpeditionForm({
                       </div>
                       <div className="flex-1 min-w-[180px]">
                         <Input
+                          id={`fm-item-en-${i}`}
                           label="Texto (EN)"
                           value={item.textEn}
                           onChange={(e) =>
@@ -1174,20 +1228,11 @@ export default function ExpeditionForm({
                           }
                         />
                       </div>
-                      <div className="w-32">
-                        <Input
-                          label="Icono"
-                          value={item.icon}
-                          onChange={(e) =>
-                            updateIncludedItem(i, "icon", e.target.value)
-                          }
-                          placeholder="mountain"
-                        />
-                      </div>
                       <button
                         type="button"
                         onClick={() => removeIncludedItem(i)}
                         className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                        aria-label="Quitar elemento"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1220,6 +1265,7 @@ export default function ExpeditionForm({
                     >
                       <div className="flex-1 min-w-[180px]">
                         <Input
+                          id={`fm-item-es-${i}`}
                           label="Texto (ES)"
                           value={item.textEs}
                           onChange={(e) =>
@@ -1229,6 +1275,7 @@ export default function ExpeditionForm({
                       </div>
                       <div className="flex-1 min-w-[180px]">
                         <Input
+                          id={`fm-item-en-${i}`}
                           label="Texto (EN)"
                           value={item.textEn}
                           onChange={(e) =>
@@ -1236,20 +1283,11 @@ export default function ExpeditionForm({
                           }
                         />
                       </div>
-                      <div className="w-32">
-                        <Input
-                          label="Icono"
-                          value={item.icon}
-                          onChange={(e) =>
-                            updateIncludedItem(i, "icon", e.target.value)
-                          }
-                          placeholder="x-circle"
-                        />
-                      </div>
                       <button
                         type="button"
                         onClick={() => removeIncludedItem(i)}
                         className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                        aria-label="Quitar elemento"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1269,6 +1307,7 @@ export default function ExpeditionForm({
             <SectionTitle>Requisitos y que llevar</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Textarea
+                id="fm-requisitos-es"
                 label="Requisitos (ES)"
                 value={form.requirementsEs}
                 onChange={(e) => set("requirementsEs", e.target.value)}
@@ -1276,6 +1315,7 @@ export default function ExpeditionForm({
                 placeholder="Requisitos para participar..."
               />
               <Textarea
+                id="fm-requisitos-en"
                 label="Requisitos (EN)"
                 value={form.requirementsEn}
                 onChange={(e) => set("requirementsEn", e.target.value)}
@@ -1284,6 +1324,7 @@ export default function ExpeditionForm({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Textarea
+                id="fm-llevar-es"
                 label="Que llevar (ES)"
                 value={form.whatToBringEs}
                 onChange={(e) => set("whatToBringEs", e.target.value)}
@@ -1291,6 +1332,7 @@ export default function ExpeditionForm({
                 placeholder="Lista de equipo necesario..."
               />
               <Textarea
+                id="fm-llevar-en"
                 label="Que llevar (EN)"
                 value={form.whatToBringEn}
                 onChange={(e) => set("whatToBringEn", e.target.value)}
@@ -1343,6 +1385,7 @@ export default function ExpeditionForm({
                     </button>
                   </div>
                   <Input
+                    id={`fm-galeria-alt-${i}`}
                     label="Texto alt"
                     value={item.altText}
                     onChange={(e) =>
@@ -1352,6 +1395,7 @@ export default function ExpeditionForm({
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <Input
+                      id={`fm-galeria-caption-es-${i}`}
                       label="Caption (ES)"
                       value={item.captionEs}
                       onChange={(e) =>
@@ -1359,6 +1403,7 @@ export default function ExpeditionForm({
                       }
                     />
                     <Input
+                      id={`fm-galeria-caption-en-${i}`}
                       label="Caption (EN)"
                       value={item.captionEn}
                       onChange={(e) =>
@@ -1370,9 +1415,12 @@ export default function ExpeditionForm({
               ))}
             </div>
 
-            <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors cursor-pointer">
+            {galleryError && (
+              <p className="text-sm text-red-600">{galleryError}</p>
+            )}
+            <label className="fm-galeria-subir inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors cursor-pointer">
               <Upload className="w-4 h-4" />
-              Agregar imagenes
+              {galleryUploading > 0 ? `Subiendo ${galleryUploading}...` : "Agregar imagenes"}
               <input
                 type="file"
                 accept="image/*"
@@ -1389,12 +1437,14 @@ export default function ExpeditionForm({
           <div className="space-y-5 max-w-3xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Input
+                id="fm-seo-titulo-es"
                 label="Meta titulo (ES)"
                 value={form.seoTitleEs}
                 onChange={(e) => set("seoTitleEs", e.target.value)}
                 placeholder="Titulo para motores de busqueda"
               />
               <Input
+                id="fm-seo-titulo-en"
                 label="Meta titulo (EN)"
                 value={form.seoTitleEn}
                 onChange={(e) => set("seoTitleEn", e.target.value)}
@@ -1402,6 +1452,7 @@ export default function ExpeditionForm({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Textarea
+                id="fm-seo-desc-es"
                 label="Meta descripcion (ES)"
                 value={form.seoDescriptionEs}
                 onChange={(e) => set("seoDescriptionEs", e.target.value)}
@@ -1409,6 +1460,7 @@ export default function ExpeditionForm({
                 placeholder="Descripcion para motores de busqueda (max 160 chars)"
               />
               <Textarea
+                id="fm-seo-desc-en"
                 label="Meta descripcion (EN)"
                 value={form.seoDescriptionEn}
                 onChange={(e) => set("seoDescriptionEn", e.target.value)}
@@ -1424,26 +1476,48 @@ export default function ExpeditionForm({
         )}
       </div>
 
-      {/* Submit button */}
-      <div className="mt-6 flex items-center justify-end gap-4">
-        <button
-          type="button"
-          onClick={() => router.push("/admin/expediciones")}
-          className="px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={saving}
-          className="px-6 py-2.5 text-sm font-medium text-white bg-forest-700 rounded-lg hover:bg-forest-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving
-            ? "Guardando..."
-            : isEdit
-              ? "Actualizar expedicion"
-              : "Guardar expedicion"}
-        </button>
+      {/* Save bar: always visible at the bottom of the screen */}
+      <div className="fm-barra sticky bottom-0 z-30 -mx-4 sm:mx-0 mt-6 border-t border-slate-200 bg-white/95 backdrop-blur px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] sm:rounded-xl sm:border">
+        <div className="flex items-center gap-3">
+          <p
+            className={`fm-estado min-w-0 flex-1 text-xs sm:text-sm ${
+              Object.keys(errors).length > 0 || message?.type === "error"
+                ? "text-red-600"
+                : justSaved
+                  ? "text-green-700 font-medium"
+                  : isDirty
+                    ? "text-summit-700 font-medium"
+                    : "text-slate-500"
+            }`}
+            role="status"
+          >
+            {Object.keys(errors).length > 0
+              ? Object.values(errors)[0]
+              : message?.type === "error"
+                ? message.text
+                : justSaved
+                  ? "✓ Cambios guardados"
+                  : isEdit
+                    ? isDirty
+                      ? "Tienes cambios sin guardar"
+                      : "Sin cambios"
+                    : "Llena los datos y guarda la expedicion"}
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/admin/expediciones")}
+            className="shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+          >
+            {isEdit && !isDirty ? "Volver" : "Cancelar"}
+          </button>
+          <button
+            type="submit"
+            disabled={saving || (isEdit && !isDirty)}
+            className="fm-guardar shrink-0 px-4 sm:px-6 py-2.5 text-sm font-medium text-white bg-forest-700 rounded-lg hover:bg-forest-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear expedicion"}
+          </button>
+        </div>
       </div>
     </form>
   );
